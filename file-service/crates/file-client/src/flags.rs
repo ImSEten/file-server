@@ -35,10 +35,10 @@ pub enum Commands {
 pub enum FileCommand {
     #[command(name = "list", about = "list files in server")]
     List {},
-    #[command(name = "upload", about = "upload files to server")]
-    Upload {},
-    #[command(name = "Download", about = "download files from server")]
-    Download {},
-    #[command(name = "Delete", about = "delete files from server")]
-    Delete {},
+    #[command(name = "upload_file", about = "upload files to server")]
+    UploadFile {},
+    #[command(name = "download_file", about = "download files from server")]
+    DownloadFile {},
+    #[command(name = "delete_file", about = "delete files from server")]
+    DeleteFile {},
 }

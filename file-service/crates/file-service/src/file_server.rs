@@ -1,6 +1,6 @@
 use service_protos::proto_file_service::{
-    file_server::File, DeleteRequest, DeleteResponse, DownloadRequest, DownloadResponse,
-    ListRequest, ListResponse, UploadRequest, UploadResponse,
+    file_server::File, DeleteFileRequest, DeleteFileResponse, DownloadFileRequest,
+    DownloadFileResponse, ListRequest, ListResponse, UploadFileRequest, UploadFileResponse,
 };
 use tonic::{Request, Response, Result, Status};
 
@@ -13,24 +13,24 @@ impl File for FileServer {
         todo!()
     }
 
-    async fn upload(
+    async fn upload_file(
         &self,
-        _request: Request<UploadRequest>,
-    ) -> Result<Response<UploadResponse>, Status> {
+        _request: Request<UploadFileRequest>,
+    ) -> Result<Response<UploadFileResponse>, Status> {
         todo!()
     }
 
-    async fn download(
+    async fn download_file(
         &self,
-        _request: Request<DownloadRequest>,
-    ) -> Result<Response<DownloadResponse>, Status> {
+        _request: Request<DownloadFileRequest>,
+    ) -> Result<Response<DownloadFileResponse>, Status> {
         todo!()
     }
 
-    async fn delete(
+    async fn delete_file(
         &self,
-        _request: Request<DeleteRequest>,
-    ) -> Result<Response<DeleteResponse>, Status> {
+        _request: Request<DeleteFileRequest>,
+    ) -> Result<Response<DeleteFileResponse>, Status> {
         todo!()
     }
 }

@@ -5,23 +5,23 @@ package file;
 
 service File {
     rpc List(ListRequest) returns (ListResponse);
-    rpc Upload(UploadRequest) returns (UploadResponse);
-    rpc Download(DownloadRequest) returns (DownloadResponse);
-    rpc Delete(DeleteRequest) returns (DeleteResponse);
+    rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
+    rpc DownloadFile(DownloadFileRequest) returns (DownloadFileResponse);
+    rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
 }
 
 message ListRequest {}
 
 message ListResponse {}
 
-message UploadRequest {}
+message UploadFileRequest {}
 
-message UploadResponse {}
+message UploadFileResponse {}
 
-message DownloadRequest {}
+message DownloadFileRequest {}
 
-message DownloadResponse {}
+message DownloadFileResponse {}
 
-message DeleteRequest {}
+message DeleteFileRequest {}
 
-message DeleteResponse {}
+message DeleteFileResponse {}

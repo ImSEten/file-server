@@ -1,8 +1,8 @@
 use tonic::{transport::Channel, Response, Status};
 
 use service_protos::proto_file_service::{
-    file_client::FileClient, DeleteRequest, DownloadRequest, ListRequest, ListResponse,
-    UploadRequest,
+    file_client::FileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, ListResponse,
+    UploadFileRequest,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -33,10 +33,10 @@ impl Client {
         client.list(ListRequest::default()).await
     }
 
-    pub async fn upload(&mut self) -> Result<(), Status> {
-        let request = UploadRequest {};
+    pub async fn upload_file(&mut self) -> Result<(), Status> {
+        let request = UploadFileRequest {};
         if let Some(client) = self.client.as_mut() {
-            match client.upload(request).await {
+            match client.upload_file(request).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             }
@@ -45,10 +45,10 @@ impl Client {
         }
     }
 
-    pub async fn download(&mut self) -> Result<(), Status> {
-        let request = DownloadRequest {};
+    pub async fn download_file(&mut self) -> Result<(), Status> {
+        let request = DownloadFileRequest {};
         if let Some(client) = self.client.as_mut() {
-            match client.download(request).await {
+            match client.download_file(request).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             }
@@ -57,10 +57,10 @@ impl Client {
         }
     }
 
-    pub async fn delete(&mut self) -> Result<(), Status> {
-        let request = DeleteRequest {};
+    pub async fn delete_file(&mut self) -> Result<(), Status> {
+        let request = DeleteFileRequest {};
         if let Some(client) = self.client.as_mut() {
-            match client.delete(request).await {
+            match client.delete_file(request).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             }
