@@ -1,0 +1,17 @@
+[package]
+name = "file-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+service-protos = { path = "../service-protos" }
+tokio = { workspace = true, features = ["full"], optional = true }
+common = { path = "../common" }
+tonic = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[features]
+connect = ["tonic", "async-trait", "tokio"]
+default = ["connect"]

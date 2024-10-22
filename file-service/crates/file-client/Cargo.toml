@@ -1,6 +1,10 @@
 [package]
 name = "file-client"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
+service-protos = { path = "../service-protos" }
+file-service = { path = "../file-service" }
+tokio = { workspace = true, features = ["full"] }
+clap = { workspace = true, features = ["derive"] }

@@ -1,0 +1,27 @@
+
+syntax = "proto3";
+
+package file;
+
+service File {
+    rpc List(ListRequest) returns (ListResponse);
+    rpc Upload(UploadRequest) returns (UploadResponse);
+    rpc Download(DownloadRequest) returns (DownloadResponse);
+    rpc Delete(DeleteRequest) returns (DeleteResponse);
+}
+
+message ListRequest {}
+
+message ListResponse {}
+
+message UploadRequest {}
+
+message UploadResponse {}
+
+message DownloadRequest {}
+
+message DownloadResponse {}
+
+message DeleteRequest {}
+
+message DeleteResponse {}
