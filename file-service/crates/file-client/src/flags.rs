@@ -38,7 +38,12 @@ pub enum FileCommand {
     #[command(name = "upload-file", about = "upload files to server")]
     UploadFile {
         /// server listening ip port
-        #[arg(name = "local-file", short, long, help = "the local file, can be abs or relative")]
+        #[arg(
+            name = "local-file",
+            short,
+            long,
+            help = "the local file, can be abs or relative"
+        )]
         local_file: String,
         /// server listening ip port
         #[arg(

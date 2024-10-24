@@ -22,11 +22,15 @@ impl File for FileServer {
         if let Some(upload_file_request) = message {
             let file = std::path::PathBuf::from(upload_file_request.file_path.clone())
                 .join(upload_file_request.file_name.clone());
+            // todo: if file is existed, we should return an exist error.
             let mut f = tokio::fs::OpenOptions::new()
                 .create(true)
+                .truncate(true)
                 .write(true)
                 .open(file)
                 .await?;
+            // todo: now we only support the file size <= 4M.
+            // todo: we need to support split file upload.
             let _ = f.write_all(&upload_file_request.content).await?;
             f.flush().await?;
             let upload_file_response = UploadFileResponse {

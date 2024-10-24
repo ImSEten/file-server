@@ -75,6 +75,7 @@ impl Client {
         if let Some(client) = self.client.as_mut() {
             match client.upload_file(receiver_stream).await {
                 Ok(_) => Ok(()),
+                // todo: if returned error is exist, we need to ask for the user whether truncate the file or create a new one.
                 Err(e) => Err(e),
             }
         } else {
