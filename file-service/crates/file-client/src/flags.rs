@@ -35,10 +35,30 @@ pub enum Commands {
 pub enum FileCommand {
     #[command(name = "list", about = "list files in server")]
     List {},
-    #[command(name = "upload_file", about = "upload files to server")]
-    UploadFile {},
-    #[command(name = "download_file", about = "download files from server")]
-    DownloadFile {},
-    #[command(name = "delete_file", about = "delete files from server")]
-    DeleteFile {},
+    #[command(name = "upload-file", about = "upload files to server")]
+    UploadFile {
+        /// server listening ip port
+        #[arg(name = "local-file", short, long, help = "the local file, can be abs or relative")]
+        local_file: String,
+        /// server listening ip port
+        #[arg(
+            name = "remote-dir",
+            short,
+            long,
+            help = "remote_dir is the dir in server, the file_name is the same as local"
+        )]
+        remote_dir: String,
+    },
+    #[command(name = "download-file", about = "download files from server")]
+    DownloadFile {
+        /// server listening ip port
+        #[arg(short, long, default_value_t = String::new(), help = "download the file from server")]
+        file: String,
+    },
+    #[command(name = "delete-file", about = "delete files from server")]
+    DeleteFile {
+        /// server listening ip port
+        #[arg(short, long, default_value_t = String::new(), help = "delete file from server")]
+        file: String,
+    },
 }

@@ -5,8 +5,8 @@ package file;
 
 service File {
     rpc List(ListRequest) returns (ListResponse);
-    rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
-    rpc DownloadFile(DownloadFileRequest) returns (DownloadFileResponse);
+    rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse);
+    rpc DownloadFile(DownloadFileRequest) returns (stream DownloadFileResponse);
     rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
 }
 
@@ -14,14 +14,34 @@ message ListRequest {}
 
 message ListResponse {}
 
-message UploadFileRequest {}
+message UploadFileRequest {
+    string FileName = 1;
+    string FilePath = 2;
+    bytes Content = 3;
+}
 
-message UploadFileResponse {}
+message UploadFileResponse {
+    string FileName = 1;
+    string FilePath = 2;
+}
 
-message DownloadFileRequest {}
+message DownloadFileRequest {
+    string FileName = 1;
+    string FilePath = 2;
+}
 
-message DownloadFileResponse {}
+message DownloadFileResponse {
+    string FileName = 1;
+    string FilePath = 2;
+    bytes Content = 3;
+}
 
-message DeleteFileRequest {}
+message DeleteFileRequest {
+    string FileName = 1;
+    string FilePath = 2;
+}
 
-message DeleteFileResponse {}
+message DeleteFileResponse {
+    string FileName = 1;
+    string FilePath = 2;
+}

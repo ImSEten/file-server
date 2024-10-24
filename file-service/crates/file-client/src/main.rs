@@ -32,17 +32,25 @@ async fn async_main() {
                     println!("list returns error: {:?}", e);
                 }
             }
-            Some(flags::FileCommand::UploadFile {}) => {
-                if let Err(e) = client.lock().await.upload_file().await {
+            Some(flags::FileCommand::UploadFile {
+                local_file,
+                remote_dir,
+            }) => {
+                if let Err(e) = client
+                    .lock()
+                    .await
+                    .upload_file(local_file, remote_dir)
+                    .await
+                {
                     println!("upload returns error: {:?}", e);
                 }
             }
-            Some(flags::FileCommand::DownloadFile {}) => {
+            Some(flags::FileCommand::DownloadFile { file }) => {
                 if let Err(e) = client.lock().await.download_file().await {
                     println!("download returns error: {:?}", e);
                 }
             }
-            Some(flags::FileCommand::DeleteFile {}) => {
+            Some(flags::FileCommand::DeleteFile { file }) => {
                 if let Err(e) = client.lock().await.delete_file().await {
                     println!("delete returns error: {:?}", e);
                 }

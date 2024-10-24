@@ -6,11 +6,13 @@ edition.workspace = true
 [dependencies]
 service-protos = { path = "../service-protos" }
 tokio = { workspace = true, features = ["full"], optional = true }
+tokio-stream = { workspace = true }
 common = { path = "../common" }
 tonic = { workspace = true, optional = true }
 async-trait = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+futures = { workspace = true }
 
 [features]
 connect = ["tonic", "async-trait", "tokio"]
