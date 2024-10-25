@@ -57,27 +57,43 @@ impl Client {
             )
             .into());
         }
-        let mut request = UploadFileRequest {
-            file_name,
-            file_path: remote_dir,
-            content: Vec::new(),
-        };
         let mut f = tokio::fs::OpenOptions::new()
             .read(true)
             .open(local_file)
             .await?;
-        f.read_to_end(&mut request.content).await?;
+
         let (sender, receiver) = tokio::sync::mpsc::unbounded_channel::<UploadFileRequest>();
-        sender
-            .send(request)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        let mut buf: [u8; 1024 * 1024] = [0; 1024 * 1024];
+        let handle = tokio::spawn(async move {
+            while let Ok(lens) = f.read(&mut buf).await {
+                if lens == 0 {
+                    break; //EOF
+                }
+                let request = UploadFileRequest {
+                    file_name: file_name.clone(),
+                    file_path: remote_dir.clone(),
+                    content: buf.into(),
+                };
+                match sender
+                    .send(request)
+                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                {
+                    Ok(_) => {}
+                    Err(e) => return Err(e),
+                }
+            }
+            Ok(())
+        });
+
         let receiver_stream = tokio_stream::wrappers::UnboundedReceiverStream::new(receiver);
         if let Some(client) = self.client.as_mut() {
             match client.upload_file(receiver_stream).await {
-                Ok(_) => Ok(()),
+                Ok(_) => {}
                 // todo: if returned error is exist, we need to ask for the user whether truncate the file or create a new one.
-                Err(e) => Err(e),
+                Err(e) => return Err(e),
             }
+            let result = tokio::join!(handle).0;
+            Ok(result.unwrap()?)
         } else {
             Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
         }

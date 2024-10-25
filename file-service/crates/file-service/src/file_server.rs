@@ -18,29 +18,62 @@ impl File for FileServer {
         &self,
         request: Request<tonic::Streaming<UploadFileRequest>>,
     ) -> Result<Response<UploadFileResponse>, Status> {
-        let message = request.into_inner().message().await?;
-        if let Some(upload_file_request) = message {
-            let file = std::path::PathBuf::from(upload_file_request.file_path.clone())
-                .join(upload_file_request.file_name.clone());
-            // todo: if file is existed, we should return an exist error.
-            let mut f = tokio::fs::OpenOptions::new()
-                .create(true)
-                .truncate(true)
-                .write(true)
-                .open(file)
-                .await?;
-            // todo: now we only support the file size <= 4M.
-            // todo: we need to support split file upload.
-            let _ = f.write_all(&upload_file_request.content).await?;
+        // todo: if file is existed, we should return an exist error.
+        let mut stream = request.into_inner();
+        let upload_file_request =
+            stream
+                .message()
+                .await?
+                .ok_or(Status::from(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "requset is None",
+                )))?;
+        let file_path = upload_file_request.file_path;
+        let file_name = upload_file_request.file_name;
+        let file = std::path::PathBuf::from(file_path.clone()).join(file_name.clone());
+        let mut f = tokio::fs::OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(file)
+            .await?;
+
+        while let Some(upload_file_request) = stream.message().await? {
+            let len = f.write(&upload_file_request.content).await?;
             f.flush().await?;
-            let upload_file_response = UploadFileResponse {
-                file_name: upload_file_request.file_name,
-                file_path: upload_file_request.file_path,
-            };
-            Ok(tonic::Response::new(upload_file_response))
-        } else {
-            Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "request is None").into())
+            if len == 0 {
+                break;
+            }
         }
+        let upload_file_response = UploadFileResponse {
+            file_name,
+            file_path,
+        };
+        Ok(tonic::Response::new(upload_file_response))
+
+        // let message = request.into_inner().message().await?;
+        // if let Some(upload_file_request) = message {
+        //     let file = std::path::PathBuf::from(upload_file_request.file_path.clone())
+        //         .join(upload_file_request.file_name.clone());
+        //     // todo: if file is existed, we should return an exist error.
+        //     let mut f = tokio::fs::OpenOptions::new()
+        //         .create(true)
+        //         .truncate(true)
+        //         .write(true)
+        //         .open(file)
+        //         .await?;
+        //     // todo: now we only support the file size <= 4M.
+        //     // todo: we need to support split file upload.
+        //     let _ = f.write_all(&upload_file_request.content).await?;
+        //     f.flush().await?;
+        //     let upload_file_response = UploadFileResponse {
+        //         file_name: upload_file_request.file_name,
+        //         file_path: upload_file_request.file_path,
+        //     };
+        //     Ok(tonic::Response::new(upload_file_response))
+        // } else {
+        //     Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "request is None").into())
+        // }
     }
 
     async fn download_file(
