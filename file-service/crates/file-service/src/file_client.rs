@@ -62,30 +62,34 @@ impl Client {
             .open(local_file)
             .await?;
 
-        let (sender, receiver) = tokio::sync::mpsc::unbounded_channel::<UploadFileRequest>();
-        let mut buf: [u8; 1024 * 1024] = [0; 1024 * 1024];
+        let (sender, receiver) = tokio::sync::mpsc::channel::<UploadFileRequest>(1);
         let handle = tokio::spawn(async move {
-            while let Ok(lens) = f.read(&mut buf).await {
-                if lens == 0 {
-                    break; //EOF
-                }
-                let request = UploadFileRequest {
+            loop {
+                let mut request = UploadFileRequest {
                     file_name: file_name.clone(),
                     file_path: remote_dir.clone(),
-                    content: buf.into(),
+                    content: Vec::with_capacity(1024 * 1024),
                 };
-                match sender
-                    .send(request)
-                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-                {
-                    Ok(_) => {}
-                    Err(e) => return Err(e),
+                if let Ok(lens) = f.read_buf(&mut request.content).await {
+                    if lens == 0 {
+                        break; //EOF
+                    }
+                    match sender
+                        .send(request)
+                        .await
+                        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                    {
+                        Ok(_) => {}
+                        Err(e) => return Err(e),
+                    }
+                } else {
+                    break;
                 }
             }
             Ok(())
         });
 
-        let receiver_stream = tokio_stream::wrappers::UnboundedReceiverStream::new(receiver);
+        let receiver_stream = tokio_stream::wrappers::ReceiverStream::new(receiver);
         if let Some(client) = self.client.as_mut() {
             match client.upload_file(receiver_stream).await {
                 Ok(_) => {}

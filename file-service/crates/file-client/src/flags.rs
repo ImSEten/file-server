@@ -11,7 +11,7 @@ pub struct Flags {
 
     /// server listening ip port
     #[arg(short, long, default_value_t = PORT, help = "server listening ip port")]
-    port: u16,
+    pub port: u16,
 
     /// 子命令
     #[command(subcommand)]

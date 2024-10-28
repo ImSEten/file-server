@@ -24,7 +24,7 @@ async fn create_client(server_ip: String, port: String) -> Arc<Mutex<Client>> {
 
 async fn async_main() {
     let parse_flags = flags::Flags::parse();
-    let client = create_client(flags::IP.to_string(), flags::PORT.to_string()).await;
+    let client = create_client(parse_flags.ip, parse_flags.port.to_string()).await;
     match parse_flags.command {
         Some(flags::Commands::File { command }) => match command {
             Some(flags::FileCommand::List {}) => {
