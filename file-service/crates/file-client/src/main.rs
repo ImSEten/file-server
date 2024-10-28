@@ -2,7 +2,8 @@ use clap::{CommandFactory, Parser};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use file_service::file_client::Client;
+use common::client::Client;
+use file_service::file_client::GRPCClient;
 
 mod flags;
 
@@ -16,9 +17,9 @@ fn main() {
     runtime.block_on(async_main());
 }
 
-async fn create_client(server_ip: String, port: String) -> Arc<Mutex<Client>> {
+async fn create_client(server_ip: String, port: String) -> Arc<Mutex<GRPCClient>> {
     Arc::new(Mutex::new(
-        Client::new(server_ip.to_string(), port.to_string()).await,
+        GRPCClient::new(server_ip.to_string(), port.to_string()).await,
     ))
 }
 

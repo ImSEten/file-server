@@ -1,21 +1,23 @@
 use tokio::io::AsyncReadExt;
-use tonic::{transport::Channel, Response, Status};
+use tonic::{transport::Channel, Status};
 
 use service_protos::proto_file_service::{
-    file_client::FileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, ListResponse,
-    UploadFileRequest,
+    file_client::FileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, UploadFileRequest,
 };
 
+use common::client;
+
 #[derive(Default, Debug, Clone)]
-pub struct Client {
+pub struct GRPCClient {
     pub server_ip: String,
     pub port: String,
     pub client: Option<FileClient<Channel>>,
 }
 
-impl Client {
-    pub async fn new(server_ip: String, port: String) -> Self {
-        Client {
+#[async_trait::async_trait]
+impl client::Client<Status> for GRPCClient {
+    async fn new(server_ip: String, port: String) -> Self {
+        GRPCClient {
             server_ip: server_ip.clone(),
             port: port.clone(),
             client: FileClient::connect(
@@ -26,19 +28,16 @@ impl Client {
         }
     }
 
-    pub async fn list(&mut self) -> Result<Response<ListResponse>, Status> {
+    async fn list(&mut self) -> Result<(), Status> {
         let client = self.client.as_mut().ok_or(std::io::Error::new(
             std::io::ErrorKind::AddrNotAvailable,
             "client is None",
         ))?;
-        client.list(ListRequest::default()).await
+        client.list(ListRequest::default()).await?;
+        Ok(())
     }
 
-    pub async fn upload_file(
-        &mut self,
-        local_file: String,
-        remote_dir: String,
-    ) -> Result<(), Status> {
+    async fn upload_file(&mut self, local_file: String, remote_dir: String) -> Result<(), Status> {
         let file_name;
         if let Some(file_name_str) = std::path::PathBuf::from(local_file.clone()).file_name() {
             if let Some(f) = file_name_str.to_str() {
@@ -103,7 +102,7 @@ impl Client {
         }
     }
 
-    pub async fn download_file(&mut self) -> Result<(), Status> {
+    async fn download_file(&mut self) -> Result<(), Status> {
         let request = DownloadFileRequest {
             file_name: "test".to_string(),
             file_path: "test".to_string(),
@@ -118,7 +117,7 @@ impl Client {
         }
     }
 
-    pub async fn delete_file(&mut self) -> Result<(), Status> {
+    async fn delete_file(&mut self) -> Result<(), Status> {
         let request = DeleteFileRequest {
             file_name: "".to_string(),
             file_path: "test".to_string(),
@@ -130,19 +129,6 @@ impl Client {
             }
         } else {
             Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
-        }
-    }
-
-    pub async fn re_connect(&mut self) -> Result<(), Status> {
-        self.client = FileClient::connect(
-            "http://".to_string() + self.server_ip.as_str() + ":" + self.port.as_str(),
-        )
-        .await
-        .ok();
-        if self.client.is_none() {
-            Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
-        } else {
-            Ok(())
         }
     }
 }

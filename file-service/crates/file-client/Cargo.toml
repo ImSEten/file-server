@@ -6,5 +6,6 @@ edition.workspace = true
 [dependencies]
 service-protos = { path = "../service-protos" }
 file-service = { path = "../file-service" }
+common = { path = "../common" }
 tokio = { workspace = true, features = ["full"] }
 clap = { workspace = true, features = ["derive"] }
