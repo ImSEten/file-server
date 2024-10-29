@@ -13,6 +13,10 @@ pub struct Flags {
     #[arg(short, long, default_value_t = PORT, help = "server listening ip port")]
     pub port: u16,
 
+    /// The maximum number of simultaneous uploads
+    #[arg(short, long, default_value_t = 4, help = "server listening ip port")]
+    pub max_simultaneous_uploads: u16,
+
     /// 子命令
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -36,7 +40,7 @@ pub enum FileCommand {
     #[command(name = "list", about = "list files in server")]
     List {},
     #[command(name = "upload-file", about = "upload files to server")]
-    UploadFile {
+    UploadFiles {
         /// server listening ip port
         #[arg(
             name = "local-file",
@@ -44,7 +48,7 @@ pub enum FileCommand {
             long,
             help = "the local file, can be abs or relative"
         )]
-        local_file: String,
+        local_files: Vec<String>,
         /// server listening ip port
         #[arg(
             name = "remote-dir",

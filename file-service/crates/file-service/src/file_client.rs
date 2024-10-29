@@ -14,29 +14,7 @@ pub struct GRPCClient {
     pub client: Option<FileClient<Channel>>,
 }
 
-#[async_trait::async_trait]
-impl client::Client<Status> for GRPCClient {
-    async fn new(server_ip: String, port: String) -> Self {
-        GRPCClient {
-            server_ip: server_ip.clone(),
-            port: port.clone(),
-            client: FileClient::connect(
-                "http://".to_string() + server_ip.as_str() + ":" + port.as_str(),
-            )
-            .await
-            .ok(),
-        }
-    }
-
-    async fn list(&mut self) -> Result<(), Status> {
-        let client = self.client.as_mut().ok_or(std::io::Error::new(
-            std::io::ErrorKind::AddrNotAvailable,
-            "client is None",
-        ))?;
-        client.list(ListRequest::default()).await?;
-        Ok(())
-    }
-
+impl GRPCClient {
     async fn upload_file(&mut self, local_file: String, remote_dir: String) -> Result<(), Status> {
         let file_name;
         if let Some(file_name_str) = std::path::PathBuf::from(local_file.clone()).file_name() {
@@ -100,6 +78,43 @@ impl client::Client<Status> for GRPCClient {
         } else {
             Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
         }
+    }
+}
+
+#[async_trait::async_trait]
+impl client::Client<Status> for GRPCClient {
+    async fn new(server_ip: String, port: String) -> Self {
+        GRPCClient {
+            server_ip: server_ip.clone(),
+            port: port.clone(),
+            client: FileClient::connect(
+                "http://".to_string() + server_ip.as_str() + ":" + port.as_str(),
+            )
+            .await
+            .ok(),
+        }
+    }
+
+    async fn list(&mut self) -> Result<(), Status> {
+        let client = self.client.as_mut().ok_or(std::io::Error::new(
+            std::io::ErrorKind::AddrNotAvailable,
+            "client is None",
+        ))?;
+        client.list(ListRequest::default()).await?;
+        Ok(())
+    }
+
+    async fn upload_files(
+        &mut self,
+        local_files: Vec<String>,
+        remote_dir: String,
+        _max_simultaneous_uploads: u16,
+    ) -> Result<(), Status> {
+        // todo: to spawn to upload, upload the max_simultaneous_uploads at the same time.
+        for local_file in local_files {
+            self.upload_file(local_file, remote_dir.clone()).await?;
+        }
+        Ok(())
     }
 
     async fn download_file(&mut self) -> Result<(), Status> {

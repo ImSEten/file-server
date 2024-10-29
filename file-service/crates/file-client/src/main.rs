@@ -33,14 +33,18 @@ async fn async_main() {
                     println!("list returns error: {:?}", e);
                 }
             }
-            Some(flags::FileCommand::UploadFile {
-                local_file,
+            Some(flags::FileCommand::UploadFiles {
+                local_files,
                 remote_dir,
             }) => {
                 if let Err(e) = client
                     .lock()
                     .await
-                    .upload_file(local_file, remote_dir)
+                    .upload_files(
+                        local_files,
+                        remote_dir,
+                        parse_flags.max_simultaneous_uploads,
+                    )
                     .await
                 {
                     println!("upload returns error: {:?}", e);
