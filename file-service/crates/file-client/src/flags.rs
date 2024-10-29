@@ -44,17 +44,17 @@ pub enum FileCommand {
         /// server listening ip port
         #[arg(
             name = "local-file",
-            short,
             long,
-            help = "the local file, can be abs or relative"
+            help = "the local file, can be abs or relative. This can be call several times, like --local-file file_A --local-file file_B --local-file file_C",
+            required = true
         )]
         local_files: Vec<String>,
         /// server listening ip port
         #[arg(
             name = "remote-dir",
-            short,
             long,
-            help = "remote_dir is the dir in server, the file_name is the same as local"
+            help = "remote_dir is the dir in server, the file_name is the same as local",
+            required = true
         )]
         remote_dir: String,
     },
