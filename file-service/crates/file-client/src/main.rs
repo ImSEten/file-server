@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use common::client::Client;
-use file_service::file_client::GRPCClient;
+use grpc_service::file_client::GRPCClient;
 
 mod flags;
 

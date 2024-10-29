@@ -1,6 +1,6 @@
 use futures::StreamExt;
 use service_protos::proto_file_service::{
-    file_server::File, DeleteFileRequest, DeleteFileResponse, DownloadFileRequest,
+    grpc_file_server::GrpcFile, DeleteFileRequest, DeleteFileResponse, DownloadFileRequest,
     DownloadFileResponse, ListRequest, ListResponse, UploadFileRequest, UploadFileResponse,
 };
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -12,7 +12,7 @@ use common::file;
 pub struct FileServer {}
 
 #[async_trait::async_trait]
-impl File for FileServer {
+impl GrpcFile for FileServer {
     async fn list(&self, _request: Request<ListRequest>) -> Result<Response<ListResponse>, Status> {
         todo!()
     }

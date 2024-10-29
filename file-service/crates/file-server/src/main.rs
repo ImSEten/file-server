@@ -54,8 +54,8 @@ pub async fn create_service(file_server: FileServer) {
         "Server is listening to {}:{}",
         file_server.ip, file_server.port
     );
-    let server = file_service::file_server::FileServer::default();
-    let svc = proto_file_service::file_server::FileServer::new(server);
+    let server = grpc_service::file_server::FileServer::default();
+    let svc = proto_file_service::grpc_file_server::GrpcFileServer::new(server);
     Server::builder()
         .add_service(svc)
         .serve(addr)

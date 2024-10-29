@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 service-protos = { path = "../service-protos" }
-file-service = { path = "../file-service" }
+grpc-service = { path = "../grpc-service" }
 tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true }
 clap = { workspace = true, features = ["derive"] }

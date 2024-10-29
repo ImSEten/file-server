@@ -2,7 +2,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tonic::{transport::Channel, Status};
 
 use service_protos::proto_file_service::{
-    file_client::FileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, UploadFileRequest,
+    grpc_file_client::GrpcFileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, UploadFileRequest,
 };
 
 use common::{client, file};
@@ -11,7 +11,7 @@ use common::{client, file};
 pub struct GRPCClient {
     pub server_ip: String,
     pub port: String,
-    pub client: Option<FileClient<Channel>>,
+    pub client: Option<GrpcFileClient<Channel>>,
 }
 
 impl GRPCClient {
@@ -142,7 +142,7 @@ impl client::Client<Status> for GRPCClient {
         GRPCClient {
             server_ip: server_ip.clone(),
             port: port.clone(),
-            client: FileClient::connect(
+            client: GrpcFileClient::connect(
                 "http://".to_string() + server_ip.as_str() + ":" + port.as_str(),
             )
             .await

@@ -1,5 +1,5 @@
 [package]
-name = "file-service"
+name = "grpc-service"
 version.workspace = true
 edition.workspace = true
 
