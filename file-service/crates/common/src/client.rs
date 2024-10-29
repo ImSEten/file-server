@@ -12,10 +12,14 @@ where
     async fn list(&mut self) -> Result<(), E>;
     async fn upload_files(
         &mut self,
-        local_file: Vec<String>,
+        local_files: Vec<String>,
         remote_dir: String,
         max_simultaneous_uploads: u16,
     ) -> Result<(), E>;
-    async fn download_file(&mut self) -> Result<(), E>;
+    async fn download_files(
+        &mut self,
+        remote_files: Vec<String>,
+        local_dir: String,
+    ) -> Result<(), E>;
     async fn delete_file(&mut self) -> Result<(), E>;
 }

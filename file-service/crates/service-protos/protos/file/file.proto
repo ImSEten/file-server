@@ -15,8 +15,11 @@ message ListRequest {}
 message ListResponse {}
 
 message UploadFileRequest {
+    // FileName is the upload file name
     string FileName = 1;
+    // FilePath is the the path of the file in remote
     string FilePath = 2;
+    // Content is the file's data.
     bytes Content = 3;
 }
 
@@ -26,7 +29,9 @@ message UploadFileResponse {
 }
 
 message DownloadFileRequest {
+    // FileName is the file name in remote.
     string FileName = 1;
+    // FilePath is the abs path of the file in remote.
     string FilePath = 2;
 }
 

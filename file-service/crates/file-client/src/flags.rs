@@ -61,8 +61,21 @@ pub enum FileCommand {
     #[command(name = "download-file", about = "download files from server")]
     DownloadFile {
         /// server listening ip port
-        #[arg(short, long, default_value_t = String::new(), help = "download the file from server")]
-        file: String,
+        #[arg(
+            name = "remote-file",
+            long,
+            help = "remote-file, must be abs path, contain the file name. This can be call several times, like --remote-file /xxx/file_A --remote-file /xxx/file_B --remote-file /xxx/file_C",
+            required = true
+        )]
+        remote_files: Vec<String>,
+
+        #[arg(
+            name = "local-dir",
+            long,
+            help = "local-dir is the dir in localhost, the file_name is the same as remote",
+            required = true
+        )]
+        local_dir: String,
     },
     #[command(name = "delete-file", about = "delete files from server")]
     DeleteFile {

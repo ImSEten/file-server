@@ -50,8 +50,16 @@ async fn async_main() {
                     println!("upload returns error: {:?}", e);
                 }
             }
-            Some(flags::FileCommand::DownloadFile { .. }) => {
-                if let Err(e) = client.lock().await.download_file().await {
+            Some(flags::FileCommand::DownloadFile {
+                remote_files,
+                local_dir,
+            }) => {
+                if let Err(e) = client
+                    .lock()
+                    .await
+                    .download_files(remote_files, local_dir)
+                    .await
+                {
                     println!("download returns error: {:?}", e);
                 }
             }

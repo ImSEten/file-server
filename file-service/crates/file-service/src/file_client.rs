@@ -1,11 +1,11 @@
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tonic::{transport::Channel, Status};
 
 use service_protos::proto_file_service::{
     file_client::FileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, UploadFileRequest,
 };
 
-use common::client;
+use common::{client, file};
 
 #[derive(Default, Debug, Clone)]
 pub struct GRPCClient {
@@ -51,6 +51,7 @@ impl GRPCClient {
                     if lens == 0 {
                         break; //EOF
                     }
+
                     match sender
                         .send(request)
                         .await
@@ -76,7 +77,61 @@ impl GRPCClient {
             let result = tokio::join!(handle).0;
             Ok(result.unwrap()?)
         } else {
-            Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
+            Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "client is None").into())
+        }
+    }
+
+    async fn download_file(
+        &mut self,
+        remote_file: String,
+        local_dir: String,
+    ) -> Result<(), Status> {
+        let path_buf = std::path::Path::new(&remote_file);
+        let file_path = file::get_file_parent(path_buf)?;
+        let file_name = file::get_file_name(path_buf)?;
+        let download_request = DownloadFileRequest {
+            file_name: file_name.clone(),
+            file_path: file_path.clone(),
+        };
+        if let Some(client) = self.client.as_mut() {
+            match client.download_file(download_request).await {
+                Ok(stream_response) => {
+                    let mut stream = stream_response.into_inner();
+                    let file = std::path::PathBuf::from(local_dir.clone()).join(file_name.clone());
+                    if file.exists() {
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::AlreadyExists,
+                            format!("file {} already exists", file.to_str().unwrap()),
+                        )
+                        .into());
+                    }
+                    let mut f = tokio::fs::OpenOptions::new()
+                        .create(true)
+                        .truncate(true)
+                        .write(true)
+                        .open(file)
+                        .await?;
+                    let mut write_times = 0;
+                    while let Some(download_file_response) = stream.message().await? {
+                        let len = f.write(&download_file_response.content).await?;
+                        write_times += 1;
+                        // Reduce the number of flushes and protect disks.
+                        // Here the disk is written every 100 MB.
+                        if write_times % 100 == 0 {
+                            f.flush().await?;
+                        }
+                        if len == 0 {
+                            break;
+                        }
+                    }
+                    f.flush().await?;
+                }
+                // todo: if returned error is exist, we need to ask for the user whether truncate the file or create a new one.
+                Err(e) => return Err(e),
+            }
+            Ok(())
+        } else {
+            Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "client is None").into())
         }
     }
 }
@@ -117,19 +172,15 @@ impl client::Client<Status> for GRPCClient {
         Ok(())
     }
 
-    async fn download_file(&mut self) -> Result<(), Status> {
-        let request = DownloadFileRequest {
-            file_name: "test".to_string(),
-            file_path: "test".to_string(),
-        };
-        if let Some(client) = self.client.as_mut() {
-            match client.download_file(request).await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            }
-        } else {
-            Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
+    async fn download_files(
+        &mut self,
+        remote_files: Vec<String>,
+        local_dir: String,
+    ) -> Result<(), Status> {
+        for remote_file in remote_files {
+            self.download_file(remote_file, local_dir.clone()).await?;
         }
+        Ok(())
     }
 
     async fn delete_file(&mut self) -> Result<(), Status> {

@@ -1,9 +1,12 @@
+use futures::StreamExt;
 use service_protos::proto_file_service::{
     file_server::File, DeleteFileRequest, DeleteFileResponse, DownloadFileRequest,
     DownloadFileResponse, ListRequest, ListResponse, UploadFileRequest, UploadFileResponse,
 };
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tonic::{Request, Response, Result, Status};
+
+use common::file;
 
 #[derive(Default, Debug)]
 pub struct FileServer {}
@@ -70,10 +73,59 @@ impl File for FileServer {
 
     async fn download_file(
         &self,
-        _request: Request<DownloadFileRequest>,
+        request: Request<DownloadFileRequest>,
     ) -> Result<Response<futures::stream::BoxStream<'static, Result<DownloadFileResponse>>>, Status>
     {
-        todo!()
+        let req = request.into_inner();
+        let file = std::path::Path::new(&req.file_path).join(&req.file_name);
+        let file_parent = file::get_file_parent(&file)?;
+        let file_name = file::get_file_name(&file)?;
+        let mut f = tokio::fs::OpenOptions::new()
+            .read(true)
+            .open(file.clone())
+            .await?;
+
+        let (sender, receiver) =
+            tokio::sync::mpsc::channel::<Result<DownloadFileResponse, Status>>(1);
+        let stream = tokio_stream::wrappers::ReceiverStream::new(receiver).boxed();
+        tokio::spawn(async move {
+            loop {
+                let mut response = DownloadFileResponse {
+                    file_name: file_name.clone(),
+                    file_path: file_parent.clone(),
+                    content: Vec::with_capacity(1024 * 1024),
+                };
+                if let Ok(lens) = f.read_buf(&mut response.content).await {
+                    if lens == 0 {
+                        break; //EOF
+                    }
+                    match sender
+                        .send(Ok(response))
+                        .await
+                        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                    {
+                        Ok(_) => {}
+                        Err(e) => {
+                            let error = e.to_string();
+                            sender.send(Err(e.into())).await.unwrap_or_default();
+                            return Err(std::io::Error::other(error));
+                        }
+                    }
+                } else {
+                    sender
+                        .send(Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            format!("read {:?} got error", file),
+                        )
+                        .into()))
+                        .await
+                        .unwrap_or_default();
+                    break;
+                }
+            }
+            Ok(())
+        });
+        Ok(Response::new(stream))
     }
 
     async fn delete_file(
