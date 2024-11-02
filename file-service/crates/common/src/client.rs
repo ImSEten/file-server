@@ -21,5 +21,10 @@ where
         remote_files: Vec<String>,
         local_dir: String,
     ) -> Result<(), E>;
-    async fn delete_file(&mut self) -> Result<(), E>;
+    async fn delete_files(&mut self, remote_files: Vec<String>) -> Result<(), E>;
+    async fn move_files(
+        &mut self,
+        src_files: Vec<String>,
+        destination_dir: String,
+    ) -> Result<(), E>;
 }

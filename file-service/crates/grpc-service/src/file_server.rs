@@ -1,7 +1,8 @@
 use futures::StreamExt;
 use service_protos::proto_file_service::{
     grpc_file_server::GrpcFile, DeleteFileRequest, DeleteFileResponse, DownloadFileRequest,
-    DownloadFileResponse, ListRequest, ListResponse, UploadFileRequest, UploadFileResponse,
+    DownloadFileResponse, ListRequest, ListResponse, MoveFileRequest, MoveFileResponse,
+    UploadFileRequest, UploadFileResponse,
 };
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tonic::{Request, Response, Result, Status};
@@ -128,10 +129,36 @@ impl GrpcFile for FileServer {
         Ok(Response::new(stream))
     }
 
-    async fn delete_file(
+    async fn delete_files(
         &self,
-        _request: Request<DeleteFileRequest>,
+        request: Request<DeleteFileRequest>,
     ) -> Result<Response<DeleteFileResponse>, Status> {
-        todo!()
+        let files = request.into_inner().file_names;
+        let mut result =
+            Ok::<Response<DeleteFileResponse>, Status>(Response::new(DeleteFileResponse {}));
+        for file in files.iter() {
+            if let Err(e) = tokio::fs::remove_dir_all(file).await {
+                result = Err(e.into());
+            };
+        }
+        result
+    }
+
+    async fn move_files(
+        &self,
+        request: Request<MoveFileRequest>,
+    ) -> Result<Response<MoveFileResponse>, Status> {
+        let req = request.into_inner();
+        let src_files = req.src_files;
+        let mut result =
+            Ok::<Response<MoveFileResponse>, Status>(Response::new(MoveFileResponse {}));
+        for src_file in src_files {
+            let file_name = file::get_file_name(std::path::Path::new(&src_file))?;
+            let new_file_name = std::path::Path::new(&req.destination_dir).join(file_name);
+            if let Err(e) = tokio::fs::rename(src_file, new_file_name).await {
+                result = Err(e.into());
+            }
+        }
+        result
     }
 }

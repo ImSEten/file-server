@@ -63,8 +63,21 @@ async fn async_main() {
                     println!("download returns error: {:?}", e);
                 }
             }
-            Some(flags::FileCommand::DeleteFile { .. }) => {
-                if let Err(e) = client.lock().await.delete_file().await {
+            Some(flags::FileCommand::DeleteFile { remote_files }) => {
+                if let Err(e) = client.lock().await.delete_files(remote_files).await {
+                    println!("delete returns error: {:?}", e);
+                }
+            }
+            Some(flags::FileCommand::MoveFile {
+                src_files,
+                destination_dir,
+            }) => {
+                if let Err(e) = client
+                    .lock()
+                    .await
+                    .move_files(src_files, destination_dir)
+                    .await
+                {
                     println!("delete returns error: {:?}", e);
                 }
             }

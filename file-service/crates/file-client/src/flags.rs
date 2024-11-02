@@ -79,8 +79,34 @@ pub enum FileCommand {
     },
     #[command(name = "delete-file", about = "delete files from server")]
     DeleteFile {
-        /// server listening ip port
-        #[arg(short, long, default_value_t = String::new(), help = "delete file from server")]
-        file: String,
+        #[arg(
+            name = "remote-file",
+            long,
+            help = "remote-file, must be abs path, contain the file name. This can be call several times, like --remote-file /xxx/file_A --remote-file /xxx/file_B --remote-file /xxx/file_C",
+            required = true
+        )]
+        remote_files: Vec<String>,
+    },
+
+    #[command(
+        name = "move-file",
+        about = "move files from src to dest dir in server"
+    )]
+    MoveFile {
+        #[arg(
+            name = "src-file",
+            long,
+            help = "src-file, must be abs path, contain the file name. This can be call several times, like --remote-file /xxx/file_A --remote-file /xxx/file_B --remote-file /xxx/file_C",
+            required = true
+        )]
+        src_files: Vec<String>,
+
+        #[arg(
+            name = "dest-dir",
+            long,
+            help = "dest-dir is the dest dir in server, move file to the dest-dir",
+            required = true
+        )]
+        destination_dir: String,
     },
 }

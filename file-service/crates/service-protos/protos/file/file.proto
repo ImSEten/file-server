@@ -7,7 +7,8 @@ service GRPCFile {
     rpc List(ListRequest) returns (ListResponse);
     rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse);
     rpc DownloadFile(DownloadFileRequest) returns (stream DownloadFileResponse);
-    rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+    rpc DeleteFiles(DeleteFileRequest) returns (DeleteFileResponse);
+    rpc MoveFiles(MoveFileRequest) returns (MoveFileResponse);
 }
 
 message ListRequest {}
@@ -42,11 +43,14 @@ message DownloadFileResponse {
 }
 
 message DeleteFileRequest {
-    string FileName = 1;
-    string FilePath = 2;
+    repeated string FileNames = 1;
 }
 
-message DeleteFileResponse {
-    string FileName = 1;
-    string FilePath = 2;
+message DeleteFileResponse {}
+
+message MoveFileRequest {
+    repeated string SrcFiles = 1;
+    string DestinationDir = 2;
 }
+
+message MoveFileResponse {}

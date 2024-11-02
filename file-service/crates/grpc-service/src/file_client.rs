@@ -2,7 +2,8 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tonic::{transport::Channel, Status};
 
 use service_protos::proto_file_service::{
-    grpc_file_client::GrpcFileClient, DeleteFileRequest, DownloadFileRequest, ListRequest, UploadFileRequest,
+    grpc_file_client::GrpcFileClient, DeleteFileRequest, DownloadFileRequest, ListRequest,
+    MoveFileRequest, UploadFileRequest,
 };
 
 use common::{client, file};
@@ -183,13 +184,31 @@ impl client::Client<Status> for GRPCClient {
         Ok(())
     }
 
-    async fn delete_file(&mut self) -> Result<(), Status> {
+    async fn delete_files(&mut self, remote_files: Vec<String>) -> Result<(), Status> {
         let request = DeleteFileRequest {
-            file_name: "".to_string(),
-            file_path: "test".to_string(),
+            file_names: remote_files,
         };
         if let Some(client) = self.client.as_mut() {
-            match client.delete_file(request).await {
+            match client.delete_files(request).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            }
+        } else {
+            Err(std::io::Error::new(std::io::ErrorKind::AddrNotAvailable, "clien is None").into())
+        }
+    }
+
+    async fn move_files(
+        &mut self,
+        src_files: Vec<String>,
+        destination_dir: String,
+    ) -> Result<(), Status> {
+        let request = MoveFileRequest {
+            src_files,
+            destination_dir,
+        };
+        if let Some(client) = self.client.as_mut() {
+            match client.move_files(request).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             }
