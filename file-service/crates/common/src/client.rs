@@ -14,7 +14,7 @@ where
         &mut self,
         local_files: Vec<String>,
         remote_dir: String,
-        max_simultaneous_uploads: u16,
+        max_simultaneous_uploads: usize,
     ) -> Result<(), E>;
     async fn download_files(
         &mut self,

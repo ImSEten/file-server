@@ -164,11 +164,24 @@ impl client::Client<Status> for GRPCClient {
         &mut self,
         local_files: Vec<String>,
         remote_dir: String,
-        _max_simultaneous_uploads: u16,
+        max_simultaneous_uploads: usize,
     ) -> Result<(), Status> {
+        let mut join_set = tokio::task::JoinSet::new();
         // todo: to spawn to upload, upload the max_simultaneous_uploads at the same time.
         for local_file in local_files {
-            self.upload_file(local_file, remote_dir.clone()).await?;
+            while join_set.len() >= max_simultaneous_uploads {
+                if let Some(res) = join_set.join_next().await {
+                    res.map_err(|e| Status::new(tonic::Code::Unknown, e.to_string()))??;
+                }
+            }
+            let mut client = self.clone();
+            let dir = remote_dir.clone();
+            join_set
+                .spawn(async move { client.upload_file(local_file.clone(), dir.clone()).await });
+        }
+
+        while let Some(res) = join_set.join_next().await {
+            res.unwrap()?;
         }
         Ok(())
     }
