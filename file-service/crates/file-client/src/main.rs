@@ -43,7 +43,7 @@ async fn async_main() {
                     .upload_files(
                         local_files,
                         remote_dir,
-                        parse_flags.max_simultaneous_uploads.into(),
+                        parse_flags.max_simultaneous_uploads,
                     )
                     .await
                 {

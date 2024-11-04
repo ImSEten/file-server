@@ -1,3 +1,5 @@
+use std::num::NonZero;
+
 pub const IP: &str = "127.0.0.1";
 pub const PORT: u16 = 10086;
 
@@ -14,8 +16,8 @@ pub struct Flags {
     pub port: u16,
 
     /// The maximum number of simultaneous uploads
-    #[arg(short, long, default_value_t = 4, help = "server listening ip port")]
-    pub max_simultaneous_uploads: u16,
+    #[arg(long, default_value_t = std::thread::available_parallelism().unwrap_or_else(|_| {println!("cannot get cpu nums, use 1"); NonZero::new(1).expect("number 1 cannot into NoneZero")}).into(), help = "The maximum number of simultaneous uploads. Default is the number of CPU cores.")]
+    pub max_simultaneous_uploads: usize,
 
     /// 子命令
     #[command(subcommand)]

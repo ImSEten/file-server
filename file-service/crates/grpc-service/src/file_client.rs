@@ -176,8 +176,7 @@ impl client::Client<Status> for GRPCClient {
             }
             let mut client = self.clone();
             let dir = remote_dir.clone();
-            join_set
-                .spawn(async move { client.upload_file(local_file.clone(), dir.clone()).await });
+            join_set.spawn(async move { client.upload_file(local_file, dir).await });
         }
 
         while let Some(res) = join_set.join_next().await {
