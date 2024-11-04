@@ -14,12 +14,13 @@ where
         &mut self,
         local_files: Vec<String>,
         remote_dir: String,
-        max_simultaneous_uploads: usize,
+        max_simultaneous: usize,
     ) -> Result<(), E>;
     async fn download_files(
         &mut self,
         remote_files: Vec<String>,
         local_dir: String,
+        max_simultaneous: usize,
     ) -> Result<(), E>;
     async fn delete_files(&mut self, remote_files: Vec<String>) -> Result<(), E>;
     async fn move_files(

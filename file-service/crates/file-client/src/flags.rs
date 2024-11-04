@@ -16,8 +16,8 @@ pub struct Flags {
     pub port: u16,
 
     /// The maximum number of simultaneous uploads
-    #[arg(long, default_value_t = std::thread::available_parallelism().unwrap_or_else(|_| {println!("cannot get cpu nums, use 1"); NonZero::new(1).expect("number 1 cannot into NoneZero")}).into(), help = "The maximum number of simultaneous uploads. Default is the number of CPU cores.")]
-    pub max_simultaneous_uploads: usize,
+    #[arg(long, default_value_t = std::thread::available_parallelism().unwrap_or_else(|_| {println!("cannot get cpu nums, use 1"); NonZero::new(1).expect("number 1 cannot into NoneZero")}).into(), help = "The maximum number of simultaneous. Default is the number of CPU cores.")]
+    pub max_simultaneous: usize,
 
     /// 子命令
     #[command(subcommand)]

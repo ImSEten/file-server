@@ -164,12 +164,12 @@ impl client::Client<Status> for GRPCClient {
         &mut self,
         local_files: Vec<String>,
         remote_dir: String,
-        max_simultaneous_uploads: usize,
+        max_simultaneous: usize,
     ) -> Result<(), Status> {
         let mut join_set = tokio::task::JoinSet::new();
         // todo: to spawn to upload, upload the max_simultaneous_uploads at the same time.
         for local_file in local_files {
-            while join_set.len() >= max_simultaneous_uploads {
+            while join_set.len() >= max_simultaneous {
                 if let Some(res) = join_set.join_next().await {
                     res.map_err(|e| Status::new(tonic::Code::Unknown, e.to_string()))??;
                 }
@@ -189,9 +189,23 @@ impl client::Client<Status> for GRPCClient {
         &mut self,
         remote_files: Vec<String>,
         local_dir: String,
+        max_simultaneous: usize,
     ) -> Result<(), Status> {
+        let mut join_set = tokio::task::JoinSet::new();
+        // todo: to spawn to upload, upload the max_simultaneous_uploads at the same time.
         for remote_file in remote_files {
-            self.download_file(remote_file, local_dir.clone()).await?;
+            while join_set.len() >= max_simultaneous {
+                if let Some(res) = join_set.join_next().await {
+                    res.map_err(|e| Status::new(tonic::Code::Unknown, e.to_string()))??;
+                }
+            }
+            let mut client = self.clone();
+            let dir = local_dir.clone();
+            join_set.spawn(async move { client.download_file(remote_file, dir).await });
+        }
+
+        while let Some(res) = join_set.join_next().await {
+            res.unwrap()?;
         }
         Ok(())
     }
