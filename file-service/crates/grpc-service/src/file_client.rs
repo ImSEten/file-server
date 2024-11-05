@@ -180,7 +180,7 @@ impl client::Client<Status> for GRPCClient {
         }
 
         while let Some(res) = join_set.join_next().await {
-            res.unwrap()?;
+            res.map_err(|e| Status::unknown(e.to_string()))??;
         }
         Ok(())
     }
@@ -205,7 +205,7 @@ impl client::Client<Status> for GRPCClient {
         }
 
         while let Some(res) = join_set.join_next().await {
-            res.unwrap()?;
+            res.map_err(|e| Status::unknown(e.to_string()))??;
         }
         Ok(())
     }

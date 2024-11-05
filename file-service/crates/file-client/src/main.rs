@@ -40,11 +40,7 @@ async fn async_main() {
                 if let Err(e) = client
                     .lock()
                     .await
-                    .upload_files(
-                        local_files,
-                        remote_dir,
-                        parse_flags.max_simultaneous,
-                    )
+                    .upload_files(local_files, remote_dir, parse_flags.max_simultaneous)
                     .await
                 {
                     println!("upload returns error: {:?}", e);
@@ -57,11 +53,7 @@ async fn async_main() {
                 if let Err(e) = client
                     .lock()
                     .await
-                    .download_files(
-                        remote_files,
-                        local_dir,
-                        parse_flags.max_simultaneous,
-                    )
+                    .download_files(remote_files, local_dir, parse_flags.max_simultaneous)
                     .await
                 {
                     println!("download returns error: {:?}", e);
