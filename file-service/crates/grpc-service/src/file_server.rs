@@ -14,8 +14,32 @@ pub struct FileServer {}
 
 #[async_trait::async_trait]
 impl GrpcFile for FileServer {
-    async fn list(&self, _request: Request<ListRequest>) -> Result<Response<ListResponse>, Status> {
-        todo!()
+    async fn list(&self, request: Request<ListRequest>) -> Result<Response<ListResponse>, Status> {
+        let list_request = request.into_inner();
+        let dir = list_request.file_path;
+        let mut read_dir = tokio::fs::read_dir(dir).await?;
+        let mut list_response = ListResponse {
+            file_infos: Vec::new(),
+        };
+        while let Some(entry) = read_dir.next_entry().await? {
+            let mut file_info = service_protos::proto_file_service::FileInfo::default();
+            let path = entry.path();
+            if path.is_dir() {
+                file_info.set_file_type(service_protos::proto_file_service::FileType::Dir);
+            } else {
+                file_info.set_file_type(service_protos::proto_file_service::FileType::File);
+            }
+            file_info.size = tokio::fs::metadata(&path).await?.len();
+            file_info.file_name = path
+                .to_str()
+                .ok_or(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "file name contains non-UTF-8 charactors",
+                ))?
+                .to_string();
+            list_response.file_infos.push(file_info);
+        }
+        Ok(Response::new(list_response))
     }
 
     async fn upload_file(

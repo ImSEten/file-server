@@ -32,7 +32,7 @@ async fn async_main() {
         Some(flags::Commands::Start { ip, port }) => {
             let file_server = FileServer::new(ip, port);
             println!("service starting...");
-            create_service(file_server).await;
+            create_grpc_service(file_server).await;
             println!("service exited");
         }
         Some(flags::Commands::Stop) => {
@@ -46,7 +46,7 @@ async fn async_main() {
     }
 }
 
-pub async fn create_service(file_server: FileServer) {
+pub async fn create_grpc_service(file_server: FileServer) {
     let addr = (file_server.ip.clone() + ":" + file_server.port.to_string().as_str())
         .parse()
         .expect("cannot parse addr");

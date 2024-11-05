@@ -40,7 +40,16 @@ pub enum Commands {
 #[derive(clap::Subcommand)]
 pub enum FileCommand {
     #[command(name = "list", about = "list files in server")]
-    List {},
+    List {
+        /// remote_dir in remote, list all the files in this remote_dir.
+        #[arg(
+            name = "remote-dir",
+            long,
+            help = "remote_dir is the dir in server.",
+            required = true
+        )]
+        remote_dir: String,
+    },
     #[command(name = "upload-file", about = "upload files to server")]
     UploadFiles {
         /// server listening ip port

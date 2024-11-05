@@ -151,12 +151,40 @@ impl client::Client<Status> for GRPCClient {
         }
     }
 
-    async fn list(&mut self) -> Result<(), Status> {
+    async fn list(&mut self, remote_dir: String) -> Result<(), Status> {
+        let type_width = 5;
+        let size_width = 15;
+
         let client = self.client.as_mut().ok_or(std::io::Error::new(
             std::io::ErrorKind::AddrNotAvailable,
             "client is None",
         ))?;
-        client.list(ListRequest::default()).await?;
+        let list_response = client
+            .list(ListRequest {
+                file_path: remote_dir,
+            })
+            .await?
+            .into_inner();
+        let file_infos = list_response.file_infos;
+        println!("info: default size is B.");
+        println!(
+            "{:<type_width$}{:<size_width$}{:?}",
+            "Type",
+            "Size",
+            "Name",
+            type_width = type_width,
+            size_width = size_width,
+        );
+        for file_info in file_infos {
+            println!(
+                "{:<type_width$}{:<size_width$}{:?}",
+                format!("{:?}", file_info.file_type()),
+                file_info.size,
+                file_info.file_name,
+                type_width = type_width,
+                size_width = size_width,
+            );
+        }
         Ok(())
     }
 

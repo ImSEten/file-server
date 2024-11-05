@@ -9,7 +9,7 @@ where
     where
         Self: Send + Sync;
     // todo: list return should not be ()
-    async fn list(&mut self) -> Result<(), E>;
+    async fn list(&mut self, remote_dir: String) -> Result<(), E>;
     async fn upload_files(
         &mut self,
         local_files: Vec<String>,

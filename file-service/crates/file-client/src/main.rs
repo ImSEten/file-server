@@ -28,8 +28,8 @@ async fn async_main() {
     let client = create_client(parse_flags.ip, parse_flags.port.to_string()).await;
     match parse_flags.command {
         Some(flags::Commands::File { command }) => match command {
-            Some(flags::FileCommand::List {}) => {
-                if let Err(e) = client.lock().await.list().await {
+            Some(flags::FileCommand::List { remote_dir }) => {
+                if let Err(e) = client.lock().await.list(remote_dir).await {
                     println!("list returns error: {:?}", e);
                 }
             }

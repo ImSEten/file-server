@@ -11,9 +11,25 @@ service GRPCFile {
     rpc MoveFiles(MoveFileRequest) returns (MoveFileResponse);
 }
 
-message ListRequest {}
+enum FileType {
+    // 枚举值必须指定一个整数，通常从0开始
+    File = 0;
+    Dir = 1;
+}
 
-message ListResponse {}
+message FileInfo {
+    string FileName = 1;
+    FileType FileType = 2;
+    uint64 Size = 3; 
+}
+
+message ListRequest {
+    string FilePath = 1;
+}
+
+message ListResponse {
+    repeated FileInfo FileInfos = 1;
+}
 
 message UploadFileRequest {
     // FileName is the upload file name
