@@ -7,6 +7,8 @@ edition.workspace = true
 service-protos = { path = "../service-protos" }
 grpc-service = { path = "../grpc-service" }
 tokio = { workspace = true, features = ["full"] }
+tower = { workspace = true, features = ["tokio"] }
+tower-http = { workspace = true, features = ["tokio", "trace"] }
 tonic = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 
