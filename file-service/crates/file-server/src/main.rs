@@ -54,8 +54,8 @@ pub async fn create_grpc_service(file_server: FileServer) {
         "Server is listening to {}:{}",
         file_server.ip, file_server.port
     );
-    let trace_layer = tower::ServiceBuilder::new()
-        .layer(tower_http::trace::TraceLayer::new_for_grpc());
+    let trace_layer =
+        tower::ServiceBuilder::new().layer(tower_http::trace::TraceLayer::new_for_grpc());
     let server = grpc_service::file_server::FileServer::default();
     let svc = proto_file_service::grpc_file_server::GrpcFileServer::new(server);
     Server::builder()

@@ -3,8 +3,9 @@ members = [
     "crates/file-client",
     "crates/common",
     "crates/service-protos",
-    "crates/file-server"
-, "crates/grpc-service"]
+    "crates/file-server",
+    "crates/grpc-service",
+    "crates/http-service"]
 resolver = "2"
 
 [profile.release]
