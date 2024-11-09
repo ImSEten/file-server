@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件服务器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        li a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        li a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>文件服务器</h1>
+    <p>欢迎来到文件服务器！以下是可用的文件列表：</p>
+    <ul id="file-list">
+        <!-- 文件列表将动态填充在这里 -->
+    </ul>
+
+    <script>
+        // 示例数据，实际应从服务器获取
+        const files = [
+            { name: "document.pdf", url: "/files/document.pdf" },
+            { name: "image.jpg", url: "/files/image.jpg" },
+            { name: "archive.zip", url: "/files/archive.zip" }
+        ];
+
+        // 动态填充文件列表
+        const fileList = document.getElementById('file-list');
+        files.forEach(file => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = file.url;
+            a.textContent = file.name;
+            li.appendChild(a);
+            fileList.appendChild(li);
+        });
+    </script>
+</body>
+</html>
