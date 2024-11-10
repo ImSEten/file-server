@@ -6,10 +6,15 @@ edition.workspace = true
 [dependencies]
 service-protos = { path = "../service-protos" }
 grpc-service = { path = "../grpc-service" }
+http-service = { path = "../http-service" }
+common = { path = "../common" }
 tokio = { workspace = true, features = ["full"] }
 tower = { workspace = true, features = ["tokio"] }
 tower-http = { workspace = true, features = ["tokio", "trace"] }
 tonic = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+log = { workspace = true}
+env_logger = { workspace = true}
+actix-web = { workspace = true }
 
 [build-dependencies]

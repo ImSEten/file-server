@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use actix_files::NamedFile;
-use actix_web::{get, App, HttpServer, Responder};
+use actix_web::{get, Responder};
 
 //default uploads dir , todo! get it from config
 // const UPLOAD_DIR: &str = "uploads";
@@ -21,19 +21,21 @@ use actix_web::{get, App, HttpServer, Responder};
 // TODO
 #[get("/")]
 async fn index() -> impl Responder {
-    //todo! path
+    //todo! path package source into binary file
     let index_html = PathBuf::from("Source Abs path");
 
     NamedFile::open_async(index_html).await
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init();
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| App::new().service(index))
+//         .bind("127.0.0.1:8080")?
+//         .workers(4)
+//         .run()
+//         .await
+// }
 
-    HttpServer::new(|| App::new().service(index))
-        .bind("127.0.0.1:8080")?
-        .workers(4)
-        .run()
-        .await
-}
+// async fn start_http_server() {
+
+// }
