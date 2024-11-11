@@ -1,3 +1,5 @@
+use std::os::unix::fs::MetadataExt;
+
 use futures::StreamExt;
 use service_protos::proto_file_service::{
     grpc_file_server::GrpcFile, DeleteFileRequest, DeleteFileResponse, DownloadFileRequest,
@@ -58,6 +60,7 @@ impl GrpcFile for FileServer {
                 )))?;
         let file_path = upload_file_request.file_path;
         let file_name = upload_file_request.file_name;
+        let mode = upload_file_request.mode;
         let file = std::path::PathBuf::from(file_path.clone()).join(file_name.clone());
         if file.exists() {
             return Err(std::io::Error::new(
@@ -68,6 +71,7 @@ impl GrpcFile for FileServer {
         }
         let mut f = tokio::fs::OpenOptions::new()
             .create(true)
+            .mode(mode)
             .truncate(true)
             .write(true)
             .open(file)
@@ -109,6 +113,11 @@ impl GrpcFile for FileServer {
             .read(true)
             .open(file.clone())
             .await?;
+        let mode = f
+            .metadata()
+            .await
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+            .mode();
 
         let (sender, receiver) =
             tokio::sync::mpsc::channel::<Result<DownloadFileResponse, Status>>(1);
@@ -118,6 +127,7 @@ impl GrpcFile for FileServer {
                 let mut response = DownloadFileResponse {
                     file_name: file_name.clone(),
                     file_path: file_parent.clone(),
+                    mode,
                     content: Vec::with_capacity(1024 * 1024),
                 };
                 if let Ok(lens) = f.read_buf(&mut response.content).await {
