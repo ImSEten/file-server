@@ -42,7 +42,11 @@ impl GRPCClient {
             .open(local_file)
             .await?;
 
-        let mode = f.metadata().await.unwrap().mode();
+        let mode = f
+            .metadata()
+            .await
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+            .mode();
         let (sender, receiver) = tokio::sync::mpsc::channel::<UploadFileRequest>(1);
         let handle = tokio::spawn(async move {
             loop {
@@ -110,7 +114,7 @@ impl GRPCClient {
                         )
                         .into());
                     }
-                    let first_request =
+                    let first_response =
                         stream
                             .message()
                             .await?
@@ -118,7 +122,7 @@ impl GRPCClient {
                                 std::io::ErrorKind::InvalidData,
                                 "requset is None",
                             )))?;
-                    let mode = first_request.mode;
+                    let mode = first_response.mode;
                     let mut f = tokio::fs::OpenOptions::new()
                         .create(true)
                         .mode(mode)
@@ -126,7 +130,7 @@ impl GRPCClient {
                         .write(true)
                         .open(file)
                         .await?;
-                    let _ = f.write(&first_request.content).await?;
+                    let _ = f.write(&first_response.content).await?;
                     #[allow(unused_variables)]
                     let mut write_times: u32 = 1;
                     while let Some(download_file_response) = stream.message().await? {
