@@ -4,61 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文件服务器</title>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
             background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        ul {
-            list-style-type: none;
+            margin: 0;
             padding: 0;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        li {
+
+        .table-container {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            width: 90%;
+            max-width: 800px;
             background-color: #fff;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        li a {
-            text-decoration: none;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        thead th {
+            padding: 12px;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        a {
             color: #007bff;
+            text-decoration: none;
         }
-        li a:hover {
+
+        a:hover {
             text-decoration: underline;
         }
+
+        .download-btn, .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .download-btn {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .download-btn:hover {
+            background-color: #218838;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
     </style>
 </head>
 <body>
     <h1>文件服务器</h1>
-    <p>欢迎来到文件服务器！以下是可用的文件列表：</p>
-    <ul id="file-list">
-        <!-- 文件列表将动态填充在这里 -->
-    </ul>
+    <p>欢迎来到文件服务器！以下是可用的文件列表</p>
+    <div class="container mt-5">
+        <table class="table-container" id="data-table">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>名称</th>
+                    <th>路径</th>
+                    <th>下载</th>
+                    <th>删除</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+            </tbody>
+        </table>
+    </div>
 
     <script>
-        // 示例数据，实际应从服务器获取
-        const files = [
-            { name: "document.pdf", url: "/files/document.pdf" },
-            { name: "image.jpg", url: "/files/image.jpg" },
-            { name: "archive.zip", url: "/files/archive.zip" }
-        ];
+        var fullURL = window.location.href;
+        fetch(fullURL+"list") 
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
 
-        // 动态填充文件列表
-        const fileList = document.getElementById('file-list');
-        files.forEach(file => {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = file.url;
-            a.textContent = file.name;
-            li.appendChild(a);
-            fileList.appendChild(li);
-        });
+                const tbody = document.querySelector('#data-table tbody');
+                tbody.innerHTML = ''; 
+
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    
+                    const idTd = document.createElement('td');
+                    idTd.textContent = item.id;
+                    tr.appendChild(idTd);
+
+                    const nameTd = document.createElement('td');
+                    nameTd.textContent = item.name;
+                    tr.appendChild(nameTd);
+
+                    //todo path is a url 
+                    const path = document.createElement('td');
+                    path.textContent = item.path;
+                    tr.appendChild(path);
+
+                    const button_download = document.createElement('button')
+                    button_download.textContent = "下载";
+                    button_download.className = "download-btn"
+                    const td1 = document.createElement('td');  
+                    td1.appendChild(button_download);        
+                    tr.appendChild(td1);    
+
+                    const button_delete = document.createElement('button');
+                    button_delete.textContent = "删除";
+                    const td2 = document.createElement('td');  
+                    button_delete.className = "delete-btn"
+                    td2.appendChild(button_delete);        
+                    tr.appendChild(td2);        
+
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+            });
     </script>
 </body>
 </html>
