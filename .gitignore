@@ -1,2 +1,7 @@
 /file-service/target
 /file-service/Cargo.lock
+
+/file-service/.vscode
+/file-service/.idea
+.vscode
+.idea
