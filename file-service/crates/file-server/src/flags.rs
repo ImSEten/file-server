@@ -1,6 +1,6 @@
 const IP: &str = "[::]";
 const PORT: u16 = 10086;
-
+const PROTOCOL: &str = "grpc";
 #[derive(clap::Parser)]
 #[command(name = "FileServer")]
 #[command(about = "FileServer is my own file server", long_about = None)]
@@ -27,6 +27,10 @@ pub enum Commands {
         /// server listening ip port
         #[arg(short, long, default_value_t = PORT, help = "server listening ip port")]
         port: u16,
+
+        /// server start type
+        #[arg(long,default_value = PROTOCOL, help = "server start protocol include 'grpc http'")]
+        protocol: String,
     },
     /// 停止服务
     #[command(name = "stop", about = "Stop the server")]

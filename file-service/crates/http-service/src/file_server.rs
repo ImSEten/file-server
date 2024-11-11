@@ -1,7 +1,6 @@
-use std::path::PathBuf;
+use actix_web::{get, HttpResponse, Responder};
 
-use actix_files::NamedFile;
-use actix_web::{get, Responder};
+static INDEX_HTML: &str = include_str!("sources/html/index.html");
 
 //default uploads dir , todo! get it from config
 // const UPLOAD_DIR: &str = "uploads";
@@ -21,11 +20,18 @@ use actix_web::{get, Responder};
 // TODO
 #[get("/")]
 async fn index() -> impl Responder {
-    //todo! path package source into binary file
-    let index_html = PathBuf::from("Source Abs path");
-
-    NamedFile::open_async(index_html).await
+    HttpResponse::Ok()
+        .content_type("text/html")
+        .body(INDEX_HTML)
 }
+
+//list file in dir
+// #[get("list")]
+// async fn list() -> impl Responder{
+//     //todo get dir_path from input paramters , now is temp
+//     todo!()
+
+// }
 
 // #[actix_web::main]
 // async fn main() -> std::io::Result<()> {
