@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use actix_web::{App, HttpServer};
 use clap::{CommandFactory, Parser};
 use common::server::ServerInterface;
@@ -5,7 +7,7 @@ use common::Result;
 
 use env_logger::Env;
 use http_service::file_server::index;
-use log::info;
+use log::{error, info};
 use tonic::transport::Server;
 mod flags;
 
@@ -105,17 +107,34 @@ fn main() {
 async fn async_main() {
     let parse_flags = flags::Flags::parse();
     match parse_flags.command {
-        Some(flags::Commands::Start { ip, port }) => {
+        Some(flags::Commands::Start { ip, port, protocol }) => {
             let file_server = FileServer::new(ip, port);
             info!("service starting...");
             //todo ! start server also include http
             //may use --type =http to use http service
-            let grpc_server =
-                Box::new(file_server) as Box<dyn ServerInterface<GrpcRequest, GrpcResponse>>;
-            grpc_server
-                .start()
-                .await
-                .expect("start grpc server failed!");
+            match protocol.as_str() {
+                "grpc" => {
+                    let grpc_server = Box::new(file_server)
+                        as Box<dyn ServerInterface<GrpcRequest, GrpcResponse>>;
+                    grpc_server
+                        .start()
+                        .await
+                        .expect("start grpc server failed!");
+                }
+                "http" => {
+                    let http_server = Box::new(file_server)
+                        as Box<dyn ServerInterface<HttpRequest, HttpResponse>>;
+                    http_server
+                        .start()
+                        .await
+                        .expect("start http server failed!");
+                }
+                _ => {
+                    error!("unknown  protocol  {}", protocol);
+                    exit(-1)
+                }
+            }
+
             info!("service exited");
         }
         Some(flags::Commands::Stop) => {
