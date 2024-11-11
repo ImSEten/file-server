@@ -6,7 +6,7 @@ use common::server::ServerInterface;
 use common::Result;
 
 use env_logger::Env;
-use http_service::file_server::index;
+use http_service::file_server::{index, list_file};
 use log::{error, info};
 use tonic::transport::Server;
 mod flags;
@@ -36,7 +36,7 @@ impl ServerInterface<HttpRequest, HttpResponse> for FileServer {
         let addr = format!("{}:{}", self.ip, self.port);
         info!("Server is listening to {}:{}", self.ip, self.port);
         let http_task = tokio::spawn(async move {
-            HttpServer::new(move || App::new().service(index))
+            HttpServer::new(move || App::new().service(index).service(list_file))
                 .bind(&addr)
                 .expect("bind address fail")
                 .workers(4)
