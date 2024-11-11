@@ -36,8 +36,10 @@ message UploadFileRequest {
     string FileName = 1;
     // FilePath is the the path of the file in remote
     string FilePath = 2;
+    // File mode
+    uint32 Mode = 3;
     // Content is the file's data.
-    bytes Content = 3;
+    bytes Content = 4;
 }
 
 message UploadFileResponse {
@@ -55,7 +57,8 @@ message DownloadFileRequest {
 message DownloadFileResponse {
     string FileName = 1;
     string FilePath = 2;
-    bytes Content = 3;
+    uint32 Mode = 3;
+    bytes Content = 4;
 }
 
 message DeleteFileRequest {

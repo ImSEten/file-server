@@ -1,3 +1,5 @@
+use std::os::unix::fs::MetadataExt;
+
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tonic::{transport::Channel, Status};
 
@@ -40,12 +42,14 @@ impl GRPCClient {
             .open(local_file)
             .await?;
 
+        let mode = f.metadata().await.unwrap().mode();
         let (sender, receiver) = tokio::sync::mpsc::channel::<UploadFileRequest>(1);
         let handle = tokio::spawn(async move {
             loop {
                 let mut request = UploadFileRequest {
                     file_name: file_name.clone(),
                     file_path: remote_dir.clone(),
+                    mode,
                     content: Vec::with_capacity(1024 * 1024),
                 };
                 if let Ok(lens) = f.read_buf(&mut request.content).await {
@@ -106,13 +110,25 @@ impl GRPCClient {
                         )
                         .into());
                     }
+                    let first_request =
+                        stream
+                            .message()
+                            .await?
+                            .ok_or(Status::from(std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "requset is None",
+                            )))?;
+                    let mode = first_request.mode;
                     let mut f = tokio::fs::OpenOptions::new()
                         .create(true)
+                        .mode(mode)
                         .truncate(true)
                         .write(true)
                         .open(file)
                         .await?;
-                    let mut write_times = 0;
+                    let _ = f.write(&first_request.content).await?;
+                    #[allow(unused_variables)]
+                    let mut write_times: u32 = 1;
                     while let Some(download_file_response) = stream.message().await? {
                         let len = f.write(&download_file_response.content).await?;
                         write_times += 1;
