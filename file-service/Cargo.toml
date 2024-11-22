@@ -24,16 +24,16 @@ tower = { version = "0.5.1" }
 tower-http = { version = "0.6.1" }
 prost = { version = "0.13" }
 prost-types = { version = "0.13" }
-console-api = { version = "0.6.0" }
-console-subscriber = { version = "0.2.0" }
 async-trait = { version = "0.1.83" }
 serde = { version = "1.0" }
-serde_json = { version = "1.0" }
-clap = { version = "4.5.20" }
-thiserror = "1.0.64"
-log = {version = "0.4.2", features=["kv_unstable"]}
-env_logger = "0.8"
+serde_json = { version = "1.0.133" }
+clap = { version = "4.5.21" }
+thiserror = "2.0.3"
+log = {version = "0.4.22", features=["kv_unstable"]}
+env_logger = "0.11"
 actix-web = "4.0"
+actix-files = "0.6"
+actix-multipart = "0.7.2"
 
 #[workspace.build-dependencies]
 #tonic-build = { version = "0.12.3" }
