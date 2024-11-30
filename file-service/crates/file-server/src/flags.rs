@@ -29,7 +29,7 @@ pub enum Commands {
         port: u16,
 
         /// server start type
-        #[arg(long,default_value = PROTOCOL, help = "server start protocol include 'grpc http'")]
+        #[arg(long,default_value = PROTOCOL, help = "server start protocol include 'grpc http_actix http_axum'")]
         protocol: String,
     },
     /// 停止服务

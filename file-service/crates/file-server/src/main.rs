@@ -1,12 +1,12 @@
 use std::process::exit;
 
-use actix_web::{App, HttpServer};
+use actix_web::{web, App, HttpServer};
+use axum::{routing::get, Router};
 use clap::{CommandFactory, Parser};
 use common::server::ServerInterface;
 use common::Result;
 
 use env_logger::Env;
-use http_service::file_server::{index, list_file};
 use log::{error, info};
 use tonic::transport::Server;
 mod flags;
@@ -27,22 +27,69 @@ impl FileServer {
 struct GrpcRequest {}
 struct GrpcResponse {}
 
-struct HttpRequest {}
-struct HttpResponse {}
+struct HttpAxumRequest {}
+struct HttpAxumResponse {}
+
+struct HttpActixRequest {}
+struct HttpActixResponse {}
 
 #[tonic::async_trait]
-impl ServerInterface<HttpRequest, HttpResponse> for FileServer {
+impl ServerInterface<HttpAxumRequest, HttpAxumResponse> for FileServer {
     async fn start(&self) -> Result<()> {
         let addr = format!("{}:{}", self.ip, self.port);
-        info!("Server is listening to {}:{}", self.ip, self.port);
+        let listener = tokio::net::TcpListener::bind(addr)
+            .await
+            .expect("cannot parse addr");
+        info!("Http Server is listening to {}:{}", self.ip, self.port);
+        let app = Router::new()
+            .route("/", get(http_service::file_server::index_axum))
+            .route(
+                "/download/*directory",
+                get(http_service::file_server::download_file_axum),
+            )
+            .route(
+                "/list/*directory",
+                get(http_service::file_server::list_axum),
+            )
+            .fallback(http_service::file_server::not_found_axum);
+        // 启动服务
+        axum::serve(listener, app.into_make_service())
+            .await
+            .unwrap();
+        Ok(())
+    }
+    async fn stop(&self) -> Result<()> {
+        todo!()
+    }
+
+    async fn stats(&self) -> Result<()> {
+        todo!()
+    }
+
+    async fn request(&self, _request: HttpAxumRequest) -> Result<HttpAxumResponse> {
+        todo!()
+    }
+}
+
+#[tonic::async_trait]
+impl ServerInterface<HttpActixRequest, HttpActixResponse> for FileServer {
+    async fn start(&self) -> Result<()> {
+        let addr = format!("{}:{}", self.ip, self.port);
+        info!("Http Server is listening to {}:{}", self.ip, self.port);
         let http_task = tokio::spawn(async move {
-            HttpServer::new(move || App::new().service(index).service(list_file))
-                .bind(&addr)
-                .expect("bind address fail")
-                .workers(4)
-                .run()
-                .await
-                .expect("start http failed!");
+            HttpServer::new(move || {
+                App::new()
+                    .service(web::resource("/").to(http_service::file_server::index_actix))
+                    .service(
+                        web::resource("/list/{path}").to(http_service::file_server::list_actix),
+                    )
+            })
+            .bind(&addr)
+            .expect("bind address fail")
+            .workers(4)
+            .run()
+            .await
+            .expect("start http failed!");
         });
         let _ = http_task.await;
         Ok(())
@@ -55,7 +102,7 @@ impl ServerInterface<HttpRequest, HttpResponse> for FileServer {
         todo!()
     }
 
-    async fn request(&self, _request: HttpRequest) -> Result<HttpResponse> {
+    async fn request(&self, _request: HttpActixRequest) -> Result<HttpActixResponse> {
         todo!()
     }
 }
@@ -66,7 +113,7 @@ impl ServerInterface<GrpcRequest, GrpcResponse> for FileServer {
         let addr = (self.ip.clone() + ":" + self.port.to_string().as_str())
             .parse()
             .expect("cannot parse addr");
-        info!("Server is listening to {}:{}", self.ip, self.port);
+        info!("Grpc Server is listening to {}:{}", self.ip, self.port);
         let trace_layer =
             tower::ServiceBuilder::new().layer(tower_http::trace::TraceLayer::new_for_grpc());
         let server = grpc_service::file_server::FileServer::default();
@@ -121,9 +168,17 @@ async fn async_main() {
                         .await
                         .expect("start grpc server failed!");
                 }
-                "http" => {
+                "http_axum" => {
                     let http_server = Box::new(file_server)
-                        as Box<dyn ServerInterface<HttpRequest, HttpResponse>>;
+                        as Box<dyn ServerInterface<HttpAxumRequest, HttpAxumResponse>>;
+                    http_server
+                        .start()
+                        .await
+                        .expect("start http server failed!");
+                }
+                "http_actix" => {
+                    let http_server = Box::new(file_server)
+                        as Box<dyn ServerInterface<HttpActixRequest, HttpActixResponse>>;
                     http_server
                         .start()
                         .await

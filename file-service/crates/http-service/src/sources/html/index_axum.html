@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件服务器</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 15px 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* max-width: 1200px; */
+            margin: 0 auto;
+            /* padding: 0 15px; */
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 1.2em;
+            margin: 0;
+        }
+
+        .user-email {
+            font-size: 0.9em;
+            color: #ccc;
+            margin: 2px 0 0;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            padding: 5px 10px;
+            transition: background-color 0.3s;
+        }
+
+        nav ul li a:hover {
+            background-color: #555;
+            border-radius: 5px;
+        }
+        .table-container {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            /* width: 90%;
+            max-width: 800px; */
+            background-color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #2b4057;
+            color: #fff;
+        }
+
+        thead th {
+            padding: 12px;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .download-btn, .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .download-btn {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .download-btn:hover {
+            background-color: #218838;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+    
+        .search-input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 300px; 
+        }
+    
+        .btn-primary {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .welcome-header {
+            background: linear-gradient(to right, #46424260, #35302d); 
+            color: white; 
+            padding: 10px 20px;
+            border-radius: 10px; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+
+        .header-and-search {
+            display: flex;
+            align-items: center; 
+            gap: 20px; 
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header">
+            <div class="user-info">
+                <img src="user-avatar.jpg" alt="User Avatar" class="avatar">
+                <div class="user-details">
+                    <h1 class="user-name">老登</h1>
+                    <p class="user-email">老登@example.com</p>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">主页</a></li>
+                    <li><a href="#">预留</a></li>
+                    <li><a href="#">设置</a></li>
+                    <li><a href="#">登出</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <div class="header-and-search">
+        <h1 class="welcome-header">欢迎老登</h1>
+
+        <div class="search-container">
+            <input type="text" placeholder="搜索文件..." class="search-input">
+            <button class="btn btn-primary">转到</button>
+        </div>
+    </div>
+    <div class="container mt-5">
+        
+        <table class="table-container" id="data-table">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>名称</th>
+                    <th>路径</th>
+                    <th>下载</th>
+                    <th>删除</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        var fullURL = window.location.href;
+        fetch(fullURL+"list//") 
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.querySelector('#data-table tbody');
+                tbody.innerHTML = ''; 
+
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    
+                    const idTd = document.createElement('td');
+                    idTd.textContent = item.id;
+                    tr.appendChild(idTd);
+
+                    const nameTd = document.createElement('td');
+                    nameTd.textContent = item.name;
+                    tr.appendChild(nameTd);
+
+                    const pathTd = document.createElement('td');
+                    pathTd.textContent = item.path;
+                    tr.appendChild(pathTd);
+
+                    // 创建下载按钮，并添加点击事件
+                    const button_download = document.createElement('button');
+                    button_download.textContent = "下载";
+                    button_download.className = "download-btn";
+                    button_download.addEventListener('click', (event) => downloadFile(item.path));
+                    const td1 = document.createElement('td');  
+                    td1.appendChild(button_download);        
+                    tr.appendChild(td1);    
+
+                    // 创建删除按钮（假设逻辑不变）
+                    const button_delete = document.createElement('button');
+                    button_delete.textContent = "删除";
+                    button_delete.className = "delete-btn";
+                    const td2 = document.createElement('td');  
+                    td2.appendChild(button_delete);        
+                    tr.appendChild(td2);        
+
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+            });
+
+        function downloadFile(dir) {
+            // 构造下载链接
+            const downloadLink = `${fullURL}download/${encodeURIComponent(dir)}`;
+            
+            // 创建隐藏的a标签进行下载
+            const a = document.createElement('a');
+            a.href = downloadLink;
+            a.download = dir.split('/').pop(); // 使用路径的最后一部分作为文件名
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a); // 清理
+        }
+    </script>
+</body>
+</html>
