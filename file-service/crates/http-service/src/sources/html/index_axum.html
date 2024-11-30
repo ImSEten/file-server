@@ -243,67 +243,89 @@
 
     <script>
         var fullURL = window.location.href;
-        fetch(fullURL+"list//") 
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const tbody = document.querySelector('#data-table tbody');
-                tbody.innerHTML = ''; 
 
-                data.forEach(item => {
-                    const tr = document.createElement('tr');
-                    
-                    const idTd = document.createElement('td');
-                    idTd.textContent = item.id;
-                    tr.appendChild(idTd);
+        function fetchAndDisplayDirectory(dir) {
+            const listURL = `${fullURL}list/${encodeURIComponent(dir)}`;
+            fetch(listURL)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.querySelector('#data-table tbody');
+                    tbody.innerHTML = ''; // 清空现有内容
 
-                    const nameTd = document.createElement('td');
-                    nameTd.textContent = item.name;
-                    tr.appendChild(nameTd);
+                    data.forEach(item => {
+                        const tr = document.createElement('tr');
+                        
+                        const idTd = document.createElement('td');
+                        idTd.textContent = item.id;
+                        tr.appendChild(idTd);
 
-                    const pathTd = document.createElement('td');
-                    pathTd.textContent = item.path;
-                    tr.appendChild(pathTd);
+                        const nameTd = document.createElement('td');
+                        nameTd.textContent = item.name;
+                        tr.appendChild(nameTd);
 
-                    // 创建下载按钮，并添加点击事件
-                    const button_download = document.createElement('button');
-                    button_download.textContent = "下载";
-                    button_download.className = "download-btn";
-                    button_download.addEventListener('click', (event) => downloadFile(item.path));
-                    const td1 = document.createElement('td');  
-                    td1.appendChild(button_download);        
-                    tr.appendChild(td1);    
+                        const pathTd = document.createElement('td');
+                        const pathLink = document.createElement('a');
+                        pathLink.textContent = item.path;
+                        if (item.is_dir) {
+                            // 如果是文件夹，添加点击事件
+                            pathLink.addEventListener('click', (event) => enterDirectory(item.path));
+                            pathLink.style.cursor = 'pointer'; // 显示手指指针
+                        } else {
+                            pathLink.style.pointerEvents = 'none'; // 禁用点击
+                            pathLink.style.cursor = 'default'; // 默认指针
+                            pathLink.style.textDecoration = 'none'; // 去掉下划线
+                        }
+                        pathTd.appendChild(pathLink);
+                        tr.appendChild(pathTd);
 
-                    // 创建删除按钮（假设逻辑不变）
-                    const button_delete = document.createElement('button');
-                    button_delete.textContent = "删除";
-                    button_delete.className = "delete-btn";
-                    const td2 = document.createElement('td');  
-                    td2.appendChild(button_delete);        
-                    tr.appendChild(td2);        
+                        const button_download = document.createElement('button');
+                        button_download.textContent = "下载";
+                        button_download.className = "download-btn";
+                        if (!item.is_dir) { // 只有文件才有下载按钮
+                            button_download.addEventListener('click', (event) => downloadFile(item.path));
+                        } else {
+                            button_download.disabled = true; // 文件夹没有下载按钮
+                        }
+                        const td1 = document.createElement('td');  
+                        td1.appendChild(button_download);        
+                        tr.appendChild(td1);    
 
-                    tbody.appendChild(tr);
+                        const button_delete = document.createElement('button');
+                        button_delete.textContent = "删除";
+                        button_delete.className = "delete-btn";
+                        const td2 = document.createElement('td');  
+                        td2.appendChild(button_delete);        
+                        tr.appendChild(td2);        
+
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('There was a problem with your fetch operation:', error);
                 });
-            })
-            .catch(error => {
-                console.error('There was a problem with your fetch operation:', error);
-            });
+        }
+
+        // 初始加载时获取根目录内容
+        fetchAndDisplayDirectory("/");
 
         function downloadFile(dir) {
-            // 构造下载链接
             const downloadLink = `${fullURL}download/${encodeURIComponent(dir)}`;
-            
-            // 创建隐藏的a标签进行下载
             const a = document.createElement('a');
             a.href = downloadLink;
             a.download = dir.split('/').pop(); // 使用路径的最后一部分作为文件名
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a); // 清理
+        }
+
+        function enterDirectory(dir) {
+            // 获取并显示指定目录的内容
+            fetchAndDisplayDirectory(dir);
         }
     </script>
 </body>
