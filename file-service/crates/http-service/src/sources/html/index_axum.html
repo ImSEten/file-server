@@ -126,6 +126,15 @@
             text-decoration: underline;
         }
 
+        .file-path {
+            color: black; /* 设置文本颜色为黑色 */
+            text-decoration: none; /* 默认不显示下划线 */
+        }
+
+        .file-path:hover {
+            text-decoration: none; /* 鼠标悬停时也不显示下划线 */
+        }
+
         .download-btn, .delete-btn {
             padding: 8px 12px;
             border: none;
@@ -192,7 +201,6 @@
             align-items: center; 
             gap: 20px; 
         }
-
     </style>
 </head>
 <body>
@@ -297,19 +305,21 @@
 
                         const pathTd = document.createElement('td');
                         const pathLink = document.createElement('a');
-                        pathLink.textContent = item.path;
                         if (item.is_dir) {
-                            // 如果是文件夹，添加点击事件
+                            // 如果是文件夹，在路径后面添加斜杠
+                            pathLink.textContent = item.path + '/';
+                            // 添加点击事件
                             pathLink.addEventListener('click', (event) => {
                                 event.preventDefault(); // 阻止默认的链接行为
                                 enterDirectory(item.path);
                             });
                             pathLink.style.cursor = 'pointer'; // 显示手指指针
                         } else {
-                            pathLink.style.pointerEvents = 'none'; // 禁用点击
-                            pathLink.style.cursor = 'default'; // 默认指针
-                            pathLink.style.textDecoration = 'none'; // 去掉下划线
+                            // 如果是文件
+                            pathLink.textContent = item.path;
+                            pathLink.className = 'file-path'; // 应用新的样式
                         }
+
                         pathTd.appendChild(pathLink);
                         tr.appendChild(pathTd);
 
