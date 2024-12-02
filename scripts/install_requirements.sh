@@ -7,7 +7,7 @@ if [ "$RUNNER_OS" == 'Linux' ]; then
     # Install on Linux
     sudo apt-get update
     sudo apt-get install -y protobuf-compiler
-    sudo apt-get install libssl-dev
+    sudo apt-get install -y libssl-dev
 elif [ "$RUNNER_OS" == 'macOS' ]; then
     # Install on macOS
     brew install protobuf

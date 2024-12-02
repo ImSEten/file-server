@@ -17,8 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: install-protoc
-      run: ./scripts/install_protoc.sh
+    - name: install-requirements
+      run: ./scripts/install_requirements.sh
     - name: Run cargo test --verbose
       run: cd file-service; cargo test --verbose
     - name: Run cargo clippy --all-targets -- -D warnings
@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: install-protoc
-        run: ./scripts/install_protoc.sh
+      - name: install-requirements
+        run: ./scripts/install_requirements.sh
       - name: Build
         run: cd file-service; cargo build --verbose
