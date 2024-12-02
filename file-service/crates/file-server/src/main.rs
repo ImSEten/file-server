@@ -45,7 +45,10 @@ impl ServerInterface<HttpAxumRequest, HttpAxumResponse> for FileServer {
             .route("/", get(http_service::file_server::index_axum))
             .route("/file", get(http_service::file_server::index_axum))
             .route("/file/", get(http_service::file_server::index_axum))
-            .route("/file/*directory", get(http_service::file_server::index_axum))
+            .route(
+                "/file/*directory",
+                get(http_service::file_server::index_axum),
+            )
             .route(
                 "/download/*directory",
                 get(http_service::file_server::download_file_axum),
