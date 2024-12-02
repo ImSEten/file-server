@@ -207,7 +207,7 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="#">主页</a></li>
+                    <li><a href="/file">主页</a></li>
                     <li><a href="#">预留</a></li>
                     <li><a href="#">设置</a></li>
                     <li><a href="#">登出</a></li>
@@ -242,10 +242,37 @@
     </div>
 
     <script>
-        var fullURL = window.location.href;
+        // 获取当前路径
+        let currentPath = '/';
 
+        // 更新URL而不需要重新加载页面
+        function updateURL(path) {
+            history.pushState({}, '', `/file${path}`);
+            fetchAndDisplayDirectory(path);
+        }
+
+        // 初始加载时获取根目录内容
+        window.addEventListener('load', () => {
+            const path = window.location.pathname.replace('/file', '') || '/';
+            updateURL(path);
+        });
+
+        // 监听popstate事件，处理浏览器的前进/后退按钮
+        window.addEventListener('popstate', (event) => {
+            const path = window.location.pathname.replace('/file', '');
+            fetchAndDisplayDirectory(path);
+        });
+
+        // 进入目录时更新URL
+        function enterDirectory(dir) {
+            currentPath = dir;
+            updateURL(dir);
+        }
+
+        // 修改fetchAndDisplayDirectory函数以接受路径参数
         function fetchAndDisplayDirectory(dir) {
-            const listURL = `${fullURL}list/${encodeURIComponent(dir)}`;
+            const fullURL = window.location.origin; // 获取当前域名和端口
+            const listURL = `${fullURL}/list${dir === '/' ? '//' : dir}`;
             fetch(listURL)
                 .then(response => {
                     if (!response.ok) {
@@ -273,7 +300,10 @@
                         pathLink.textContent = item.path;
                         if (item.is_dir) {
                             // 如果是文件夹，添加点击事件
-                            pathLink.addEventListener('click', (event) => enterDirectory(item.path));
+                            pathLink.addEventListener('click', (event) => {
+                                event.preventDefault(); // 阻止默认的链接行为
+                                enterDirectory(item.path);
+                            });
                             pathLink.style.cursor = 'pointer'; // 显示手指指针
                         } else {
                             pathLink.style.pointerEvents = 'none'; // 禁用点击
@@ -310,22 +340,16 @@
                 });
         }
 
-        // 初始加载时获取根目录内容
-        fetchAndDisplayDirectory("/");
-
+        // 下载文件
         function downloadFile(dir) {
-            const downloadLink = `${fullURL}download/${encodeURIComponent(dir)}`;
+            const fullURL = window.location.origin; // 获取当前域名和端口
+            const downloadLink = `${fullURL}/download${dir}`;
             const a = document.createElement('a');
             a.href = downloadLink;
             a.download = dir.split('/').pop(); // 使用路径的最后一部分作为文件名
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a); // 清理
-        }
-
-        function enterDirectory(dir) {
-            // 获取并显示指定目录的内容
-            fetchAndDisplayDirectory(dir);
         }
     </script>
 </body>
