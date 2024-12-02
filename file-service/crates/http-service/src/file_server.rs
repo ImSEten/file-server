@@ -1,7 +1,6 @@
 use actix_web::{web, HttpResponse, Responder};
 use axum::{
     self,
-    body::Body,
     extract::Path,
     http::StatusCode,
     response::{Html, IntoResponse},
@@ -158,6 +157,9 @@ pub async fn download_file_axum(
         .unwrap()
         .mode();
 
+    let name = file.file_name().and_then(|f| f.to_str()).unwrap_or("unknown");
+    let content_disposition = format!("attachment; filename=\"{}\"", name);
+
     let (sender, receiver) = tokio::sync::mpsc::channel::<Result<Vec<u8>, std::io::Error>>(1);
     let stream = tokio_stream::wrappers::ReceiverStream::new(receiver);
     tokio::spawn(async move {
@@ -192,5 +194,13 @@ pub async fn download_file_axum(
         }
         //Ok(())
     });
-    Ok(Body::from_stream(stream))
+    match axum::response::Response::builder()
+        .status(StatusCode::OK)
+        .header(axum::http::header::CONTENT_DISPOSITION, content_disposition)
+        .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
+        .body(axum::body::Body::from_stream(stream))
+    {
+        Ok(body) => Ok(body),
+        Err(e) => Err((StatusCode::OK, e.to_string())),
+    }
 }
