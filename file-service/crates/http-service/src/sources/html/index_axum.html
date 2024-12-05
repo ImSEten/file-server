@@ -236,7 +236,7 @@
         <table class="table-container" id="data-table">
             <thead>
                 <tr>
-                    <th>id</th>
+                    <th>大小</th>
                     <th>名称</th>
                     <th>路径</th>
                     <th>下载</th>
@@ -277,6 +277,17 @@
             updateURL(dir);
         }
 
+        // 将字节转换为人类可读格式
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
         // 修改fetchAndDisplayDirectory函数以接受路径参数
         function fetchAndDisplayDirectory(dir) {
             const fullURL = window.location.origin; // 获取当前域名和端口
@@ -295,9 +306,10 @@
                     data.forEach(item => {
                         const tr = document.createElement('tr');
                         
-                        const idTd = document.createElement('td');
-                        idTd.textContent = item.id;
-                        tr.appendChild(idTd);
+                        // 创建 size 列
+                        const sizeTd = document.createElement('td');
+                        sizeTd.textContent = formatBytes(item.size); // 使用新函数格式化大小
+                        tr.appendChild(sizeTd);
 
                         const nameTd = document.createElement('td');
                         nameTd.textContent = item.name;

@@ -26,20 +26,16 @@ impl GrpcFile for FileServer {
         while let Some(entry) = read_dir.next_entry().await? {
             let mut file_info = service_protos::proto_file_service::FileInfo::default();
             let path = entry.path();
-            if path.is_dir() {
-                file_info.set_file_type(service_protos::proto_file_service::FileType::Dir);
-            } else {
-                file_info.set_file_type(service_protos::proto_file_service::FileType::File);
+            if let Ok(info) = common::file::FileInfo::new(&path).await {
+                if info.is_dir {
+                    file_info.set_file_type(service_protos::proto_file_service::FileType::Dir);
+                } else {
+                    file_info.set_file_type(service_protos::proto_file_service::FileType::File);
+                }
+                file_info.size = info.size;
+                file_info.file_name = info.path;
+                list_response.file_infos.push(file_info);
             }
-            file_info.size = tokio::fs::metadata(&path).await?.len();
-            file_info.file_name = path
-                .to_str()
-                .ok_or(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "file name contains non-UTF-8 charactors",
-                ))?
-                .to_string();
-            list_response.file_infos.push(file_info);
         }
         Ok(Response::new(list_response))
     }

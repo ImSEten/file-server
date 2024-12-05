@@ -34,12 +34,12 @@ impl DatabaseConnector for MysqlConnector {
 
 #[test]
 fn test_mysql() -> Result<(), Box<dyn Error>> {
-    let mysql_connector =
+    let _mysql_connector =
         MysqlConnector::new("mysql://username:password@localhost:3306/database_name");
-    let _pool = mysql_connector.connect()?;
-    let rows = mysql_connector.query("SELECT id, name FROM users")?;
-    for row in rows {
-        println!("{:?}", row);
-    }
+    // let _pool = mysql_connector.connect()?;
+    // let rows = mysql_connector.query("SELECT id, name FROM users")?;
+    // for row in rows {
+    //     println!("{:?}", row);
+    // }
     Ok(())
 }

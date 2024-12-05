@@ -6,6 +6,8 @@ edition.workspace = true
 [dependencies]
 tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 service-protos = { path = "../service-protos" }
 async-trait = { workspace = true }
 thiserror = {workspace = true}

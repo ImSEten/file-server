@@ -6,7 +6,7 @@ use axum::{
     response::{Html, IntoResponse},
     Json,
 };
-use serde::{Deserialize, Serialize};
+use common::file::FileInfo;
 use serde_json::json;
 use std::os::unix::fs::MetadataExt;
 use tokio::io::AsyncReadExt;
@@ -14,26 +14,6 @@ use tokio::io::AsyncReadExt;
 static INDEX_AXUM_HTML: &str = include_str!("sources/html/index_axum.html");
 static INDEX_ACTIX_HTML: &str = include_str!("sources/html/index_actix.html");
 
-#[derive(Serialize, Deserialize, Default)]
-struct FileInfo {
-    id: u64,
-    name: String,
-    path: String,
-    is_dir: bool,
-}
-
-impl FileInfo {
-    fn get_file_info(id: u64, path: &std::path::Path) -> Result<Self, std::io::Error> {
-        let name = common::file::get_file_name(path)?;
-        let is_dir = path.is_dir();
-        Ok(FileInfo {
-            id,
-            name,
-            path: common::file::path_to_string(path)?,
-            is_dir,
-        })
-    }
-}
 //default uploads dir , todo! get it from config
 // const UPLOAD_DIR: &str = "uploads";
 
@@ -75,15 +55,14 @@ pub async fn list_actix(path: web::Path<String>) -> impl Responder {
         .await
         .map_err(|e| (StatusCode::OK, e.to_string()))
     {
-        let mut id: u64 = 1;
         while let Some(entry) = read_dir.next_entry().await.unwrap_or_default() {
             let path = entry.path();
-            if let Ok(file_info) =
-                FileInfo::get_file_info(id, &path).map_err(|e| (StatusCode::OK, e.to_string()))
+            if let Ok(file_info) = FileInfo::new(&path)
+                .await
+                .map_err(|e| (StatusCode::OK, e.to_string()))
             {
                 file_list.push(file_info);
             }
-            id += 1;
         }
     }
     HttpResponse::Ok().json(file_list)
@@ -119,16 +98,17 @@ pub async fn list_axum(
     let mut read_dir = tokio::fs::read_dir(root_path)
         .await
         .map_err(|e| (StatusCode::OK, e.to_string()))?;
-    let mut id: u64 = 1;
     while let Some(entry) = read_dir
         .next_entry()
         .await
         .map_err(|e| (StatusCode::OK, e.to_string()))?
     {
         let path = entry.path();
-        file_list
-            .push(FileInfo::get_file_info(id, &path).map_err(|e| (StatusCode::OK, e.to_string()))?);
-        id += 1;
+        file_list.push(
+            FileInfo::new(&path)
+                .await
+                .map_err(|e| (StatusCode::OK, e.to_string()))?,
+        );
     }
 
     Ok(Json(file_list))
@@ -157,7 +137,10 @@ pub async fn download_file_axum(
         .unwrap()
         .mode();
 
-    let name = file.file_name().and_then(|f| f.to_str()).unwrap_or("unknown");
+    let name = file
+        .file_name()
+        .and_then(|f| f.to_str())
+        .unwrap_or("unknown");
     let content_disposition = format!("attachment; filename=\"{}\"", name);
 
     let (sender, receiver) = tokio::sync::mpsc::channel::<Result<Vec<u8>, std::io::Error>>(1);
