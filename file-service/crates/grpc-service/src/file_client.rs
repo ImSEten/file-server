@@ -54,7 +54,7 @@ impl GRPCClient {
                     file_name: file_name.clone(),
                     file_path: remote_dir.clone(),
                     mode,
-                    content: Vec::with_capacity(1024 * 1024),
+                    content: Vec::with_capacity(common::file::FILE_BLOCK_1M),
                 };
                 if let Ok(lens) = f.read_buf(&mut request.content).await {
                     if lens == 0 {

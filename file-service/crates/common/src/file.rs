@@ -10,7 +10,7 @@ pub struct FileInfo {
     pub is_dir: bool,
 }
 
-pub const FILE_BLOCK_1M: u64 = 1024 * 1024;
+pub const FILE_BLOCK_1M: usize = 1024 * 1024;
 pub const FLUSH_TIME: u64 = 100;
 
 impl FileInfo {
@@ -93,7 +93,7 @@ pub async fn read_file_content(
     let (sender, receiver) = tokio::sync::mpsc::channel::<Result<Vec<u8>, std::io::Error>>(2);
     tokio::spawn(async move {
         loop {
-            let mut content: Vec<u8> = Vec::with_capacity(FILE_BLOCK_1M as usize);
+            let mut content: Vec<u8> = Vec::with_capacity(FILE_BLOCK_1M);
             if let Ok(lens) = f.read_buf(&mut content).await {
                 if lens == 0 {
                     break; //EOF
