@@ -9,7 +9,6 @@ use axum::{
 use common::file::FileInfo;
 use serde_json::json;
 use std::os::unix::fs::MetadataExt;
-use tokio::io::AsyncReadExt;
 
 static INDEX_AXUM_HTML: &str = include_str!("sources/html/index_axum.html");
 static INDEX_ACTIX_HTML: &str = include_str!("sources/html/index_actix.html");
@@ -125,7 +124,7 @@ pub async fn download_file_axum(
     if file.is_dir() {
         return Err((StatusCode::OK, "file if dir, cannot download".to_string()));
     }
-    let mut f = tokio::fs::OpenOptions::new()
+    let f = tokio::fs::OpenOptions::new()
         .read(true)
         .open(file)
         .await
@@ -142,41 +141,8 @@ pub async fn download_file_axum(
         .and_then(|f| f.to_str())
         .unwrap_or("unknown");
     let content_disposition = format!("attachment; filename=\"{}\"", name);
-
-    let (sender, receiver) = tokio::sync::mpsc::channel::<Result<Vec<u8>, std::io::Error>>(1);
+    let receiver = common::file::read_file_content(file_name).await.unwrap();
     let stream = tokio_stream::wrappers::ReceiverStream::new(receiver);
-    tokio::spawn(async move {
-        loop {
-            let mut content: Vec<u8> = Vec::with_capacity(1024 * 1024);
-            if let Ok(lens) = f.read_buf(&mut content).await {
-                if lens == 0 {
-                    break; //EOF
-                }
-                match sender
-                    .send(Ok(content))
-                    .await
-                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-                {
-                    Ok(_) => {}
-                    Err(e) => {
-                        sender.send(Err(e)).await.unwrap_or_default();
-                        // return Err(std::io::Error::other(error));
-                    }
-                }
-            } else {
-                // TODO: send error.
-                sender
-                    .send(Err(std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        format!("read {:?} got error", file_name),
-                    )))
-                    .await
-                    .unwrap_or_default();
-                break;
-            }
-        }
-        //Ok(())
-    });
     match axum::response::Response::builder()
         .status(StatusCode::OK)
         .header(axum::http::header::CONTENT_DISPOSITION, content_disposition)

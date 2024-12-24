@@ -6,7 +6,7 @@ use service_protos::proto_file_service::{
     DownloadFileResponse, ListRequest, ListResponse, MoveFileRequest, MoveFileResponse,
     UploadFileRequest, UploadFileResponse,
 };
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tonic::{Request, Response, Result, Status};
 
 use common::file;
@@ -81,7 +81,7 @@ impl GrpcFile for FileServer {
             write_times += 1;
             // Reduce the number of flushes and protect disks.
             // Here the disk is written every 100 MB.
-            if write_times % 100 == 0 {
+            if write_times % common::file::FLUSH_TIME as u32 == 0 {
                 f.flush().await?;
             }
             if len == 0 {
@@ -105,7 +105,7 @@ impl GrpcFile for FileServer {
         let file = std::path::Path::new(&req.file_path).join(&req.file_name);
         let file_parent = file::get_file_parent(&file)?;
         let file_name = file::get_file_name(&file)?;
-        let mut f = tokio::fs::OpenOptions::new()
+        let f = tokio::fs::OpenOptions::new()
             .read(true)
             .open(file.clone())
             .await?;
@@ -116,42 +116,46 @@ impl GrpcFile for FileServer {
             .mode();
 
         let (sender, receiver) =
-            tokio::sync::mpsc::channel::<Result<DownloadFileResponse, Status>>(1);
+            tokio::sync::mpsc::channel::<Result<DownloadFileResponse, Status>>(2);
         let stream = tokio_stream::wrappers::ReceiverStream::new(receiver).boxed();
+        let mut rx = common::file::read_file_content(common::file::path_to_string(&file)?).await?;
         tokio::spawn(async move {
-            loop {
-                let mut response = DownloadFileResponse {
-                    file_name: file_name.clone(),
-                    file_path: file_parent.clone(),
-                    mode,
-                    content: Vec::with_capacity(1024 * 1024),
-                };
-                if let Ok(lens) = f.read_buf(&mut response.content).await {
-                    if lens == 0 {
-                        break; //EOF
-                    }
-                    match sender
-                        .send(Ok(response))
-                        .await
-                        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-                    {
-                        Ok(_) => {}
-                        Err(e) => {
-                            let error = e.to_string();
-                            sender.send(Err(e.into())).await.unwrap_or_default();
-                            return Err(std::io::Error::other(error));
+            while let Some(content) = rx.recv().await {
+                match content {
+                    Ok(c) => {
+                        if c.is_empty() {
+                            break; //EOF
+                        }
+                        let response = DownloadFileResponse {
+                            file_name: file_name.clone(),
+                            file_path: file_parent.clone(),
+                            mode,
+                            content: c,
+                        };
+                        match sender
+                            .send(Ok(response))
+                            .await
+                            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                let error = e.to_string();
+                                sender.send(Err(e.into())).await.unwrap_or_default();
+                                return Err(std::io::Error::other(error));
+                            }
                         }
                     }
-                } else {
-                    sender
-                        .send(Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            format!("read {:?} got error", file),
-                        )
-                        .into()))
-                        .await
-                        .unwrap_or_default();
-                    break;
+                    Err(e) => {
+                        sender
+                            .send(Err(std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                format!("read {:?} got error: {:?}", file, e),
+                            )
+                            .into()))
+                            .await
+                            .unwrap_or_default();
+                        break;
+                    }
                 }
             }
             Ok(())
