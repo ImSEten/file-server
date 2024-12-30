@@ -176,10 +176,8 @@ impl GrpcFile for FileServer {
                 if let Err(e) = tokio::fs::remove_dir_all(file_path).await {
                     result = Err(e.into());
                 };
-            } else {
-                if let Err(e) = tokio::fs::remove_file(file_path).await {
-                    result = Err(e.into());
-                };
+            } else if let Err(e) = tokio::fs::remove_file(file_path).await {
+                result = Err(e.into());
             }
         }
         result
