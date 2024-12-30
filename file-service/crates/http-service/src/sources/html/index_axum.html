@@ -316,7 +316,8 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // 修改fetchAndDisplayDirectory函数以接受路径参数
+        // ... 现有的 JavaScript 代码 ...
+
         function fetchAndDisplayDirectory(dir) {
             const fullURL = window.location.origin; // 获取当前域名和端口
             const listURL = `${fullURL}/list${dir === '/' ? '//' : dir}`;
@@ -333,7 +334,7 @@
 
                     data.forEach(item => {
                         const tr = document.createElement('tr');
-                        
+
                         // 创建 size 列
                         const sizeTd = document.createElement('td');
                         sizeTd.textContent = formatBytes(item.size); // 使用新函数格式化大小
@@ -378,6 +379,7 @@
                         const button_delete = document.createElement('button');
                         button_delete.textContent = "删除";
                         button_delete.className = "delete-btn";
+                        button_delete.addEventListener('click', () => deleteItem(item.path, item.is_dir));
                         const td2 = document.createElement('td');  
                         td2.appendChild(button_delete);        
                         tr.appendChild(td2);        
@@ -390,6 +392,31 @@
                 });
         }
 
+        // 删除项目（文件或目录）
+        async function deleteItem(path, isDir) {
+            const confirmDelete = confirm(`确定要删除 "${path}" 吗？此操作不可逆！`);
+            if (!confirmDelete) return;
+
+            const fullPath = path.startsWith('/') ? path : `/${path}`;
+            try {
+                const response = await fetch(`${window.location.origin}/delete${fullPath}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('删除成功！');
+                    // 刷新文件列表
+                    const currentPath = window.location.pathname.replace('/file', '') || '/';
+                    fetchAndDisplayDirectory(currentPath);
+                } else {
+                    const errorMessage = await response.text();
+                    alert(`删除失败：${errorMessage}`);
+                }
+            } catch (error) {
+                console.error('删除过程中发生错误:', error);
+                alert('删除过程中发生错误，请检查控制台日志。');
+            }
+        }
         // 下载文件
         function downloadFile(dir) {
             const fullURL = window.location.origin; // 获取当前域名和端口

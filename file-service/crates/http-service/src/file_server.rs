@@ -209,3 +209,30 @@ pub async fn upload_file_axum(
         .body("File uploaded successfully.".to_string())
         .unwrap())
 }
+
+// delete file in dir
+pub async fn delete_file_axum(
+    Path(mut directory): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    log::debug!("delete request for directory = {:?}", directory);
+    if !directory.starts_with("/") {
+        directory = format!("/{}", directory);
+    }
+    let file_path = std::path::Path::new(&directory);
+
+    if !file_path.exists() {
+        return Err((StatusCode::NOT_FOUND, "path not exist".to_string()));
+    }
+
+    if file_path.is_dir() {
+        match tokio::fs::remove_dir_all(file_path).await {
+            Ok(_) => Ok(Json("delete finished")),
+            Err(e) => Err((StatusCode::NOT_FOUND, e.to_string())),
+        }
+    } else {
+        match tokio::fs::remove_file(file_path).await {
+            Ok(_) => Ok(Json("delete finished")),
+            Err(e) => Err((StatusCode::NOT_FOUND, e.to_string())),
+        }
+    }
+}

@@ -2,7 +2,7 @@ use std::process::exit;
 
 use actix_web::{web, App, HttpServer};
 use axum::{
-    routing::{get, post},
+    routing::{delete, get, post},
     Router,
 };
 use clap::{CommandFactory, Parser};
@@ -63,6 +63,10 @@ impl ServerInterface<HttpAxumRequest, HttpAxumResponse> for FileServer {
             .route(
                 "/upload/*directory",
                 post(http_service::file_server::upload_file_axum),
+            )
+            .route(
+                "/delete/*directory",
+                delete(http_service::file_server::delete_file_axum),
             )
             .fallback(http_service::file_server::not_found_axum);
         // 启动服务
