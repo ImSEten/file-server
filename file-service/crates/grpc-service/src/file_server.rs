@@ -171,9 +171,16 @@ impl GrpcFile for FileServer {
         let mut result =
             Ok::<Response<DeleteFileResponse>, Status>(Response::new(DeleteFileResponse {}));
         for file in files.iter() {
-            if let Err(e) = tokio::fs::remove_dir_all(file).await {
-                result = Err(e.into());
-            };
+            let file_path = std::path::Path::new(file);
+            if file_path.is_dir() {
+                if let Err(e) = tokio::fs::remove_dir_all(file_path).await {
+                    result = Err(e.into());
+                };
+            } else {
+                if let Err(e) = tokio::fs::remove_file(file_path).await {
+                    result = Err(e.into());
+                };
+            }
         }
         result
     }
