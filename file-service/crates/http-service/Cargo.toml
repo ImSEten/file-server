@@ -9,7 +9,7 @@ edition.workspace = true
 actix-web = { workspace = true }
 actix-files = { workspace = true }
 actix-multipart = { workspace = true }
-axum = { workspace = true, features = ["multipart"] }
+axum = { workspace = true, features = ["multipart", "http2"] }
 common = { path = "../common" }
 env_logger = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
