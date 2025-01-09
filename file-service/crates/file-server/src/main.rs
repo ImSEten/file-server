@@ -65,6 +65,10 @@ impl ServerInterface<HttpAxumRequest, HttpAxumResponse> for FileServer {
                 post(http_service::file_server::upload_file_axum),
             )
             .route(
+                "/merge/*directory",
+                post(http_service::file_server::merge_file_axum),
+            )
+            .route(
                 "/delete/*directory",
                 delete(http_service::file_server::delete_file_axum),
             )

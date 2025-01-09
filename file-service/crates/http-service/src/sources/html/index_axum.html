@@ -418,7 +418,7 @@
             }
         }
         // 下载文件
-        function downloadFile(dir) {
+        async function downloadFile(dir) {
             const fullURL = window.location.origin; // 获取当前域名和端口
             const downloadLink = `${fullURL}/download${dir}`;
             const a = document.createElement('a');
@@ -429,9 +429,79 @@
             document.body.removeChild(a); // 清理
         }
 
+        // 设置每个分块的大小（例如：2MB）
+        const CHUNK_SIZE = 1 * 1024 * 1024;
+
         // 获取上传按钮和文件输入元素
         const uploadButton = document.getElementById('uploadButton');
         const fileInput = document.getElementById('fileInput');
+
+        // 封装后的文件上传函数
+        async function uploadFileWithChunks(file, currentPath) {
+            let start = 0;
+            let end = CHUNK_SIZE;
+            let chunkIndex = 0;
+            console.debug("file.size = ", file.size)
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
+            const fileNameBase = file.name;
+            let allChunksUploadedSuccessfully = true;
+
+            while (start < file.size) {
+                console.debug("start = ", start)
+                const chunk = file.slice(start, end);
+                const formData = new FormData();
+                // 使用带有后缀的文件名来区分不同的分块
+                const fileName = chunkIndex === 0 ? fileNameBase : `${fileNameBase}.${chunkIndex}`;
+                formData.append('file', chunk, fileName);
+
+                try {
+                    const response = await fetch(`${window.location.origin}/upload${currentPath === '/' ? '//' : currentPath}`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        console.error('response error:', response);
+                        throw new Error('上传分块失败');
+                        return
+                    } else {
+                        console.log(`分块 ${chunkIndex}/${totalChunks} 上传成功`);
+                        // 每个分块上传成功后立即尝试合并
+                        await sendMergeRequest(fileNameBase, currentPath, chunkIndex);
+                    }
+                } catch (error) {
+                    console.error('上传过程中发生错误:', error);
+                    alert('文件上传过程中发生错误，请检查控制台日志。');
+                    return
+                }
+
+                chunkIndex++;
+                start = end;
+                end = start + CHUNK_SIZE;
+            }
+
+            alert('文件所有分块上传和合并成功！');
+            fetchAndDisplayDirectory(currentPath);
+        }
+
+        // 发送合并请求的辅助函数
+        async function sendMergeRequest(fileNameBase, currentPath, chunkIndex) {
+            console.debug("sendMergeRequest")
+            try {
+                const mergeResponse = await fetch(`${window.location.origin}/merge/${encodeURIComponent(`${currentPath}/${fileNameBase}`)}`, {
+                    method: 'POST'
+                });
+
+                if (mergeResponse.ok) {
+                    console.log(`分块 ${chunkIndex + 1} 合并成功`);
+                } else {
+                    console.error(`分块 ${chunkIndex + 1} 合并失败`);
+                }
+            } catch (error) {
+                console.error('合并过程中发生错误:', error);
+                alert('文件合并过程中发生错误，请检查控制台日志。');
+            }
+        }
 
         // 当点击上传按钮时，触发文件选择框
         uploadButton.addEventListener('click', () => {
@@ -446,36 +516,11 @@
             // 获取当前路径作为上传目标目录
             const currentPath = window.location.pathname.replace('/file', '') || '/';
 
-            // 创建FormData对象并填充文件数据
-            const formData = new FormData();
             for (let i = 0; i < files.length; i++) {
-                formData.append('files[]', files[i]);
+                await uploadFileWithChunks(files[i], currentPath);
             }
 
-            // 设置上传的API端点
-            const uploadEndpoint = `${window.location.origin}/upload${currentPath === '/' ? '//' : currentPath}`;
-
-            try {
-                // 发送POST请求上传文件
-                const response = await fetch(uploadEndpoint, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    // 如果上传成功，刷新文件列表
-                    fetchAndDisplayDirectory(currentPath);
-                    alert('文件上传成功！');
-                } else {
-                    alert('文件上传失败，请重试。');
-                }
-            } catch (error) {
-                console.error('上传过程中发生错误:', error);
-                alert('文件上传过程中发生错误，请检查控制台日志。');
-            }
-
-            // 清空文件输入，以便可以再次选择相同的文件进行上传
-            fileInput.value = '';
+            fileInput.value = ''; // 清空文件输入，以便可以再次选择相同的文件进行上传
         });
     </script>
 </body>
