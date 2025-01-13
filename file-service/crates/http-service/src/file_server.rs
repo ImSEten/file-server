@@ -215,7 +215,7 @@ pub async fn upload_file_axum(
                 log::error!("open file error: {}", e);
                 (StatusCode::NOT_FOUND, e.to_string())
             })?;
-        f.write(&data).await.map_err(|e| {
+        f.write_all(&data).await.map_err(|e| {
             log::error!("write failed: {}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -317,7 +317,7 @@ pub async fn merge_file_axum(
             log::error!("read file {} error: {}", &tmp_file, e);
             (StatusCode::NOT_FOUND, e.to_string())
         })?;
-        f.write(&buf_tmp).await.map_err(|e| {
+        f.write_all(&buf_tmp).await.map_err(|e| {
             log::error!("write file {} error: {}", &directory, e);
             (StatusCode::NOT_FOUND, e.to_string())
         })?;

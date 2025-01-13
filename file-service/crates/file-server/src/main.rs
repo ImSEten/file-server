@@ -2,6 +2,7 @@ use std::process::exit;
 
 use actix_web::{web, App, HttpServer};
 use axum::{
+    extract::DefaultBodyLimit,
     routing::{delete, get, post},
     Router,
 };
@@ -15,6 +16,7 @@ use tonic::transport::Server;
 mod flags;
 
 use service_protos::proto_file_service;
+use tower_http::limit::RequestBodyLimitLayer;
 
 pub struct FileServer {
     ip: String,
@@ -64,6 +66,8 @@ impl ServerInterface<HttpAxumRequest, HttpAxumResponse> for FileServer {
                 "/upload/*directory",
                 post(http_service::file_server::upload_file_axum),
             )
+            .layer(DefaultBodyLimit::disable())
+            .layer(RequestBodyLimitLayer::new(512 * 1024 * 1024))
             .route(
                 "/merge/*directory",
                 post(http_service::file_server::merge_file_axum),

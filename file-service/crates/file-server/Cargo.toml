@@ -10,7 +10,7 @@ http-service = { path = "../http-service" }
 common = { path = "../common" }
 tokio = { workspace = true, features = ["full"] }
 tower = { workspace = true, features = ["tokio"] }
-tower-http = { workspace = true, features = ["tokio", "trace"] }
+tower-http = { workspace = true, features = ["tokio", "trace", "limit"] }
 tonic = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 log = { workspace = true}

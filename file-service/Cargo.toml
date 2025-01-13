@@ -36,6 +36,7 @@ actix-web = { version = "4.0" }
 actix-multipart = { version = "0.7.2" }
 actix-files = { version = "0.6" }
 hyper = { version = "1.5.1" }
+mysql = { version = "25.0.1" }
 
 #[workspace.build-dependencies]
 #tonic-build = { version = "0.12.3" }

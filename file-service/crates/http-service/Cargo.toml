@@ -17,4 +17,4 @@ serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tokio-stream = { workspace = true }
 log = { workspace = true, features=["kv_unstable"] }
-mysql = "25.0.1"
+mysql = { workspace = true }
